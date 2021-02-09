@@ -1,6 +1,6 @@
 {
   "name": "neo-dagre",
-  "version": "0.8.7-test1",
+  "version": "0.8.7",
   "description": "Graph layout for JavaScript",
   "author": "Chris Pettitt <cpettitt@gmail.com>",
   "contributors": [
