@@ -36,7 +36,7 @@ lib/version.js: package.json
 $(DIRS):
 	@mkdir -p $@
 
-test: unit-test browser-test
+test: unit-test
 
 unit-test: $(SRC_FILES) $(TEST_FILES) node_modules | $(BUILD_DIR)
 	@$(MOCHA) --dir $(COVERAGE_DIR) -- $(MOCHA_OPTS) $(TEST_FILES) || $(MOCHA) $(MOCHA_OPTS) $(TEST_FILES)
