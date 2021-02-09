@@ -1,6 +1,6 @@
 {
   "name": "neo-dagre",
-  "version": "0.8.7",
+  "version": "0.8.7-test1",
   "description": "Graph layout for JavaScript",
   "author": "Chris Pettitt <cpettitt@gmail.com>",
   "contributors": [
@@ -11,6 +11,14 @@
   "keywords": [
     "graph",
     "layout"
+  ],
+  "publishConfig": {
+    "registry": "https://neo.jfrog.io/neo/api/npm/npm-local"
+  },
+  "files": [
+    "index.js",
+    "dist/",
+    "lib/"
   ],
   "dependencies": {
     "graphlib": "2.1.8",
@@ -37,8 +45,5 @@
     "sprintf": "0.1.5",
     "uglify-js": "3.10.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dagrejs/dagre.git"
-  }
+  "repository": "git@github.com:neo-technology/dagre.git"
 }
