@@ -1,5 +1,5 @@
 {
-  "name": "neo-dagre",
+  "name": "neo4j-dagre",
   "version": "0.8.8",
   "description": "Graph layout for JavaScript",
   "author": "Chris Pettitt <cpettitt@gmail.com>",
