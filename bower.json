@@ -1,6 +1,6 @@
 {
   "name": "neo4j-dagre",
-  "version": "0.8.9",
+  "version": "0.8.10",
   "main": [
     "dist/neo4j-dagre.core.js"
   ],
