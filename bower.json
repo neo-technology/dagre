@@ -1,8 +1,8 @@
 {
-  "name": "dagre",
-  "version": "0.8.5",
+  "name": "neo4j-dagre",
+  "version": "0.8.9",
   "main": [
-    "dist/dagre.core.js"
+    "dist/neo4j-dagre.core.js"
   ],
   "ignore": [
     ".*",
@@ -10,8 +10,8 @@
     "CHANGELOG.md",
     "Makefile",
     "browser.js",
-    "dist/dagre.js",
-    "dist/dagre.min.js",
+    "dist/neo4j-dagre.js",
+    "dist/neo4j-dagre.min.js",
     "index.js",
     "karma*",
     "lib/**",
@@ -20,7 +20,7 @@
     "test/**"
   ],
   "dependencies": {
-    "graphlib": "^2.1.8",
-    "lodash": "^4.17.15"
+    "graphlib": "2.1.8",
+    "lodash": "^4.17.19"
   }
 }

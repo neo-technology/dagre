@@ -311,6 +311,7 @@ function debugOrdering(g) {
 }
 
 },{"./graphlib":7,"./lodash":10,"./util":29}],7:[function(require,module,exports){
+// eslint-disable-next-line no-redeclare
 /* global window */
 
 var graphlib;
@@ -471,12 +472,15 @@ module.exports = layout;
 
 function layout(g, opts) {
   var time = opts && opts.debugTiming ? util.time : util.notime;
+  var layoutGraph = 
   time("layout", function() {
-    var layoutGraph = 
+    layoutGraph = 
       time("  buildLayoutGraph", function() { return buildLayoutGraph(g); });
     time("  runLayout",        function() { runLayout(layoutGraph, time); });
     time("  updateInputGraph", function() { updateInputGraph(g, layoutGraph); });
+    return layoutGraph;
   });
+  return layoutGraph;
 }
 
 function runLayout(g, time) {
@@ -844,6 +848,7 @@ function canonicalize(attrs) {
 }
 
 },{"./acyclic":2,"./add-border-segments":3,"./coordinate-system":4,"./graphlib":7,"./lodash":10,"./nesting-graph":11,"./normalize":12,"./order":17,"./parent-dummy-chains":22,"./position":24,"./rank":26,"./util":29}],10:[function(require,module,exports){
+// eslint-disable-next-line no-redeclare
 /* global window */
 
 var lodash;
@@ -1900,6 +1905,10 @@ function findType1Conflicts(g, layering) {
 function findType2Conflicts(g, layering) {
   var conflicts = {};
 
+  if (g.nodeCount() > 1000) {
+    return conflicts;
+  }
+
   function scan(south, southPos, southEnd, prevNorthBorder, nextNorthBorder) {
     var v;
     _.forEach(_.range(southPos, southEnd), function(i) {
@@ -2950,7 +2959,7 @@ function notime(name, fn) {
 }
 
 },{"./graphlib":7,"./lodash":10}],30:[function(require,module,exports){
-module.exports = "0.8.5";
+module.exports = "0.8.9";
 
 },{}]},{},[1])(1)
 });
