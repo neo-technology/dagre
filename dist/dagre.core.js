@@ -36,7 +36,7 @@ module.exports = {
 },{"./lib/debug":6,"./lib/graphlib":7,"./lib/layout":9,"./lib/util":29,"./lib/version":30}],2:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 var greedyFAS = require("./greedy-fas");
 
 module.exports = {
@@ -103,7 +103,7 @@ function undo(g) {
 }
 
 },{"./greedy-fas":8,"./lodash":10}],3:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 var util = require("./util");
 
 module.exports = addBorderSegments;
@@ -145,7 +145,7 @@ function addBorderNode(g, prop, prefix, sg, sgNode, rank) {
 },{"./lodash":10,"./util":29}],4:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 
 module.exports = {
   adjust: adjust,
@@ -275,9 +275,9 @@ function filterOutLinks(k, v) {
 }
 
 },{}],6:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 var util = require("./util");
-var Graph = require("./graphlib").Graph;
+var Graph = require("graphlib").Graph;
 
 module.exports = {
   debugOrdering: debugOrdering
@@ -331,8 +331,8 @@ if (!graphlib) {
 module.exports = graphlib;
 
 },{"graphlib":undefined}],8:[function(require,module,exports){
-var _ = require("./lodash");
-var Graph = require("./graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 var List = require("./data/list");
 
 /*
@@ -453,7 +453,7 @@ function assignBucket(buckets, zeroIdx, entry) {
 },{"./data/list":5,"./graphlib":7,"./lodash":10}],9:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 var acyclic = require("./acyclic");
 var normalize = require("./normalize");
 var rank = require("./rank");
@@ -466,7 +466,7 @@ var coordinateSystem = require("./coordinate-system");
 var order = require("./order");
 var position = require("./position");
 var util = require("./util");
-var Graph = require("./graphlib").Graph;
+var Graph = require("graphlib").Graph;
 
 module.exports = layout;
 
@@ -895,7 +895,7 @@ if (!lodash) {
 module.exports = lodash;
 
 },{"lodash/cloneDeep":undefined,"lodash/constant":undefined,"lodash/defaults":undefined,"lodash/each":undefined,"lodash/filter":undefined,"lodash/find":undefined,"lodash/flatten":undefined,"lodash/forEach":undefined,"lodash/forIn":undefined,"lodash/has":undefined,"lodash/isUndefined":undefined,"lodash/last":undefined,"lodash/map":undefined,"lodash/mapValues":undefined,"lodash/max":undefined,"lodash/merge":undefined,"lodash/min":undefined,"lodash/minBy":undefined,"lodash/now":undefined,"lodash/pick":undefined,"lodash/range":undefined,"lodash/reduce":undefined,"lodash/sortBy":undefined,"lodash/uniqueId":undefined,"lodash/values":undefined,"lodash/zipObject":undefined}],11:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 var util = require("./util");
 
 module.exports = {
@@ -1031,7 +1031,7 @@ function cleanup(g) {
 },{"./lodash":10,"./util":29}],12:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 var util = require("./util");
 
 module.exports = {
@@ -1121,7 +1121,7 @@ function undo(g) {
 }
 
 },{"./lodash":10,"./util":29}],13:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = addSubgraphConstraints;
 
@@ -1176,7 +1176,7 @@ function addSubgraphConstraints(g, cg, vs) {
 }
 
 },{"../lodash":10}],14:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = barycenter;
 
@@ -1206,8 +1206,8 @@ function barycenter(g, movable) {
 
 
 },{"../lodash":10}],15:[function(require,module,exports){
-var _ = require("../lodash");
-var Graph = require("../graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 
 module.exports = buildLayerGraph;
 
@@ -1283,7 +1283,7 @@ function createRootNode(g) {
 },{"../graphlib":7,"../lodash":10}],16:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = crossCount;
 
@@ -1352,13 +1352,13 @@ function twoLayerCrossCount(g, northLayer, southLayer) {
 },{"../lodash":10}],17:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 var initOrder = require("./init-order");
 var crossCount = require("./cross-count");
 var sortSubgraph = require("./sort-subgraph");
 var buildLayerGraph = require("./build-layer-graph");
 var addSubgraphConstraints = require("./add-subgraph-constraints");
-var Graph = require("../graphlib").Graph;
+var Graph = require("graphlib").Graph;
 var util = require("../util");
 
 module.exports = order;
@@ -1433,7 +1433,7 @@ function assignOrder(g, layering) {
 },{"../graphlib":7,"../lodash":10,"../util":29,"./add-subgraph-constraints":13,"./build-layer-graph":15,"./cross-count":16,"./init-order":18,"./sort-subgraph":20}],18:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = initOrder;
 
@@ -1473,7 +1473,7 @@ function initOrder(g) {
 },{"../lodash":10}],19:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = resolveConflicts;
 
@@ -1595,7 +1595,7 @@ function mergeEntries(target, source) {
 }
 
 },{"../lodash":10}],20:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 var barycenter = require("./barycenter");
 var resolveConflicts = require("./resolve-conflicts");
 var sort = require("./sort");
@@ -1673,7 +1673,7 @@ function mergeBarycenters(target, other) {
 }
 
 },{"../lodash":10,"./barycenter":14,"./resolve-conflicts":19,"./sort":21}],21:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 var util = require("../util");
 
 module.exports = sort;
@@ -1732,7 +1732,7 @@ function compareWithBias(bias) {
 }
 
 },{"../lodash":10,"../util":29}],22:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 
 module.exports = parentDummyChains;
 
@@ -1822,8 +1822,8 @@ function postorder(g) {
 },{"./lodash":10}],23:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
-var Graph = require("../graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 var util = require("../util");
 
 /*
@@ -2247,7 +2247,7 @@ function width(g, v) {
 },{"../graphlib":7,"../lodash":10,"../util":29}],24:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 var util = require("../util");
 var positionX = require("./bk").positionX;
 
@@ -2279,8 +2279,8 @@ function positionY(g) {
 },{"../lodash":10,"../util":29,"./bk":23}],25:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
-var Graph = require("../graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 var slack = require("./util").slack;
 
 module.exports = feasibleTree;
@@ -2420,12 +2420,12 @@ function networkSimplexRanker(g) {
 },{"./feasible-tree":25,"./network-simplex":27,"./util":28}],27:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 var feasibleTree = require("./feasible-tree");
 var slack = require("./util").slack;
 var initRank = require("./util").longestPath;
-var preorder = require("../graphlib").alg.preorder;
-var postorder = require("../graphlib").alg.postorder;
+var preorder = require("graphlib").alg.preorder;
+var postorder = require("graphlib").alg.postorder;
 var simplify = require("../util").simplify;
 
 module.exports = networkSimplex;
@@ -2656,7 +2656,7 @@ function isDescendant(tree, vLabel, rootLabel) {
 },{"../graphlib":7,"../lodash":10,"../util":29,"./feasible-tree":25,"./util":28}],28:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = {
   longestPath: longestPath,
@@ -2723,8 +2723,8 @@ function slack(g, e) {
 
 "use strict";
 
-var _ = require("./lodash");
-var Graph = require("./graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 
 module.exports = {
   addDummyNode: addDummyNode,
