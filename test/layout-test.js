@@ -1,7 +1,7 @@
 var _ = require("lodash");
 var expect = require("./chai").expect;
 var layout = require("..").layout;
-var Graph = require("../lib/graphlib").Graph;
+var Graph = require("graphlib").Graph;
 
 describe("layout", function() {
   var g;

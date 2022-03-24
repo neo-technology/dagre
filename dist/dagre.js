@@ -36,7 +36,7 @@ module.exports = {
 },{"./lib/debug":6,"./lib/graphlib":7,"./lib/layout":9,"./lib/util":29,"./lib/version":30}],2:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 var greedyFAS = require("./greedy-fas");
 
 module.exports = {
@@ -103,7 +103,7 @@ function undo(g) {
 }
 
 },{"./greedy-fas":8,"./lodash":10}],3:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 var util = require("./util");
 
 module.exports = addBorderSegments;
@@ -145,7 +145,7 @@ function addBorderNode(g, prop, prefix, sg, sgNode, rank) {
 },{"./lodash":10,"./util":29}],4:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 
 module.exports = {
   adjust: adjust,
@@ -275,9 +275,9 @@ function filterOutLinks(k, v) {
 }
 
 },{}],6:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 var util = require("./util");
-var Graph = require("./graphlib").Graph;
+var Graph = require("graphlib").Graph;
 
 module.exports = {
   debugOrdering: debugOrdering
@@ -331,8 +331,8 @@ if (!graphlib) {
 module.exports = graphlib;
 
 },{"graphlib":31}],8:[function(require,module,exports){
-var _ = require("./lodash");
-var Graph = require("./graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 var List = require("./data/list");
 
 /*
@@ -453,7 +453,7 @@ function assignBucket(buckets, zeroIdx, entry) {
 },{"./data/list":5,"./graphlib":7,"./lodash":10}],9:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 var acyclic = require("./acyclic");
 var normalize = require("./normalize");
 var rank = require("./rank");
@@ -466,7 +466,7 @@ var coordinateSystem = require("./coordinate-system");
 var order = require("./order");
 var position = require("./position");
 var util = require("./util");
-var Graph = require("./graphlib").Graph;
+var Graph = require("graphlib").Graph;
 
 module.exports = layout;
 
@@ -895,7 +895,7 @@ if (!lodash) {
 module.exports = lodash;
 
 },{"lodash/cloneDeep":227,"lodash/constant":228,"lodash/defaults":229,"lodash/each":230,"lodash/filter":232,"lodash/find":233,"lodash/flatten":235,"lodash/forEach":236,"lodash/forIn":237,"lodash/has":239,"lodash/isUndefined":258,"lodash/last":261,"lodash/map":262,"lodash/mapValues":263,"lodash/max":264,"lodash/merge":266,"lodash/min":267,"lodash/minBy":268,"lodash/now":270,"lodash/pick":271,"lodash/range":273,"lodash/reduce":274,"lodash/sortBy":276,"lodash/uniqueId":286,"lodash/values":287,"lodash/zipObject":288}],11:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 var util = require("./util");
 
 module.exports = {
@@ -1031,7 +1031,7 @@ function cleanup(g) {
 },{"./lodash":10,"./util":29}],12:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 var util = require("./util");
 
 module.exports = {
@@ -1121,7 +1121,7 @@ function undo(g) {
 }
 
 },{"./lodash":10,"./util":29}],13:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = addSubgraphConstraints;
 
@@ -1176,7 +1176,7 @@ function addSubgraphConstraints(g, cg, vs) {
 }
 
 },{"../lodash":10}],14:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = barycenter;
 
@@ -1206,8 +1206,8 @@ function barycenter(g, movable) {
 
 
 },{"../lodash":10}],15:[function(require,module,exports){
-var _ = require("../lodash");
-var Graph = require("../graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 
 module.exports = buildLayerGraph;
 
@@ -1283,7 +1283,7 @@ function createRootNode(g) {
 },{"../graphlib":7,"../lodash":10}],16:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = crossCount;
 
@@ -1352,13 +1352,13 @@ function twoLayerCrossCount(g, northLayer, southLayer) {
 },{"../lodash":10}],17:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 var initOrder = require("./init-order");
 var crossCount = require("./cross-count");
 var sortSubgraph = require("./sort-subgraph");
 var buildLayerGraph = require("./build-layer-graph");
 var addSubgraphConstraints = require("./add-subgraph-constraints");
-var Graph = require("../graphlib").Graph;
+var Graph = require("graphlib").Graph;
 var util = require("../util");
 
 module.exports = order;
@@ -1433,7 +1433,7 @@ function assignOrder(g, layering) {
 },{"../graphlib":7,"../lodash":10,"../util":29,"./add-subgraph-constraints":13,"./build-layer-graph":15,"./cross-count":16,"./init-order":18,"./sort-subgraph":20}],18:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = initOrder;
 
@@ -1473,7 +1473,7 @@ function initOrder(g) {
 },{"../lodash":10}],19:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = resolveConflicts;
 
@@ -1595,7 +1595,7 @@ function mergeEntries(target, source) {
 }
 
 },{"../lodash":10}],20:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 var barycenter = require("./barycenter");
 var resolveConflicts = require("./resolve-conflicts");
 var sort = require("./sort");
@@ -1673,7 +1673,7 @@ function mergeBarycenters(target, other) {
 }
 
 },{"../lodash":10,"./barycenter":14,"./resolve-conflicts":19,"./sort":21}],21:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 var util = require("../util");
 
 module.exports = sort;
@@ -1732,7 +1732,7 @@ function compareWithBias(bias) {
 }
 
 },{"../lodash":10,"../util":29}],22:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 
 module.exports = parentDummyChains;
 
@@ -1822,8 +1822,8 @@ function postorder(g) {
 },{"./lodash":10}],23:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
-var Graph = require("../graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 var util = require("../util");
 
 /*
@@ -2247,7 +2247,7 @@ function width(g, v) {
 },{"../graphlib":7,"../lodash":10,"../util":29}],24:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 var util = require("../util");
 var positionX = require("./bk").positionX;
 
@@ -2279,8 +2279,8 @@ function positionY(g) {
 },{"../lodash":10,"../util":29,"./bk":23}],25:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
-var Graph = require("../graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 var slack = require("./util").slack;
 
 module.exports = feasibleTree;
@@ -2420,12 +2420,12 @@ function networkSimplexRanker(g) {
 },{"./feasible-tree":25,"./network-simplex":27,"./util":28}],27:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 var feasibleTree = require("./feasible-tree");
 var slack = require("./util").slack;
 var initRank = require("./util").longestPath;
-var preorder = require("../graphlib").alg.preorder;
-var postorder = require("../graphlib").alg.postorder;
+var preorder = require("graphlib").alg.preorder;
+var postorder = require("graphlib").alg.postorder;
 var simplify = require("../util").simplify;
 
 module.exports = networkSimplex;
@@ -2656,7 +2656,7 @@ function isDescendant(tree, vLabel, rootLabel) {
 },{"../graphlib":7,"../lodash":10,"../util":29,"./feasible-tree":25,"./util":28}],28:[function(require,module,exports){
 "use strict";
 
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = {
   longestPath: longestPath,
@@ -2723,8 +2723,8 @@ function slack(g, e) {
 
 "use strict";
 
-var _ = require("./lodash");
-var Graph = require("./graphlib").Graph;
+var _ = require("lodash");
+var Graph = require("graphlib").Graph;
 
 module.exports = {
   addDummyNode: addDummyNode,
@@ -3002,7 +3002,7 @@ module.exports = {
 };
 
 },{"./lib":47,"./lib/alg":38,"./lib/json":48}],32:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = components;
 
@@ -3031,7 +3031,7 @@ function components(g) {
 }
 
 },{"../lodash":49}],33:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = dfs;
 
@@ -3076,7 +3076,7 @@ function doDfs(g, v, postorder, visited, navigation, acc) {
 
 },{"../lodash":49}],34:[function(require,module,exports){
 var dijkstra = require("./dijkstra");
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = dijkstraAll;
 
@@ -3087,7 +3087,7 @@ function dijkstraAll(g, weightFunc, edgeFunc) {
 }
 
 },{"../lodash":49,"./dijkstra":35}],35:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 var PriorityQueue = require("../data/priority-queue");
 
 module.exports = dijkstra;
@@ -3143,7 +3143,7 @@ function runDijkstra(g, source, weightFn, edgeFn) {
 }
 
 },{"../data/priority-queue":45,"../lodash":49}],36:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 var tarjan = require("./tarjan");
 
 module.exports = findCycles;
@@ -3155,7 +3155,7 @@ function findCycles(g) {
 }
 
 },{"../lodash":49,"./tarjan":43}],37:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = floydWarshall;
 
@@ -3257,7 +3257,7 @@ function preorder(g, vs) {
 }
 
 },{"./dfs":33}],42:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 var Graph = require("../graph");
 var PriorityQueue = require("../data/priority-queue");
 
@@ -3311,7 +3311,7 @@ function prim(g, weightFunc) {
 }
 
 },{"../data/priority-queue":45,"../graph":46,"../lodash":49}],43:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = tarjan;
 
@@ -3360,7 +3360,7 @@ function tarjan(g) {
 }
 
 },{"../lodash":49}],44:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = topsort;
 topsort.CycleException = CycleException;
@@ -3396,7 +3396,7 @@ function topsort(g) {
 function CycleException() {}
 CycleException.prototype = new Error(); // must be an instance of Error to pass testing
 },{"../lodash":49}],45:[function(require,module,exports){
-var _ = require("../lodash");
+var _ = require("lodash");
 
 module.exports = PriorityQueue;
 
@@ -3552,7 +3552,7 @@ PriorityQueue.prototype._swap = function(i, j) {
 },{"../lodash":49}],46:[function(require,module,exports){
 "use strict";
 
-var _ = require("./lodash");
+var _ = require("lodash");
 
 module.exports = Graph;
 
@@ -4091,7 +4091,7 @@ module.exports = {
 };
 
 },{"./graph":46,"./version":50}],48:[function(require,module,exports){
-var _ = require("./lodash");
+var _ = require("lodash");
 var Graph = require("./graph");
 
 module.exports = {
