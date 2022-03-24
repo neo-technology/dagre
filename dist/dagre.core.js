@@ -22,7 +22,7 @@ THE SOFTWARE.
 */
 
 module.exports = {
-  graphlib: require("./lib/graphlib"),
+  graphlib: require("graphlib"),
 
   layout: require("./lib/layout"),
   debug: require("./lib/debug"),
@@ -33,7 +33,7 @@ module.exports = {
   version: require("./lib/version")
 };
 
-},{"./lib/debug":6,"./lib/graphlib":7,"./lib/layout":9,"./lib/util":29,"./lib/version":30}],2:[function(require,module,exports){
+},{"./lib/debug":6,"./lib/layout":8,"./lib/util":27,"./lib/version":28,"graphlib":undefined}],2:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -102,7 +102,7 @@ function undo(g) {
   });
 }
 
-},{"./greedy-fas":8,"./lodash":10}],3:[function(require,module,exports){
+},{"./greedy-fas":7,"lodash":undefined}],3:[function(require,module,exports){
 var _ = require("lodash");
 var util = require("./util");
 
@@ -142,7 +142,7 @@ function addBorderNode(g, prop, prefix, sg, sgNode, rank) {
   }
 }
 
-},{"./lodash":10,"./util":29}],4:[function(require,module,exports){
+},{"./util":27,"lodash":undefined}],4:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -216,7 +216,7 @@ function swapXYOne(attrs) {
   attrs.y = x;
 }
 
-},{"./lodash":10}],5:[function(require,module,exports){
+},{"lodash":undefined}],5:[function(require,module,exports){
 /*
  * Simple doubly linked list implementation derived from Cormen, et al.,
  * "Introduction to Algorithms".
@@ -310,27 +310,7 @@ function debugOrdering(g) {
   return h;
 }
 
-},{"./graphlib":7,"./lodash":10,"./util":29}],7:[function(require,module,exports){
-// eslint-disable-next-line no-redeclare
-/* global window */
-
-var graphlib;
-
-if (typeof require === "function") {
-  try {
-    graphlib = require("graphlib");
-  } catch (e) {
-    // continue regardless of error
-  }
-}
-
-if (!graphlib) {
-  graphlib = window.graphlib;
-}
-
-module.exports = graphlib;
-
-},{"graphlib":undefined}],8:[function(require,module,exports){
+},{"./util":27,"graphlib":undefined,"lodash":undefined}],7:[function(require,module,exports){
 var _ = require("lodash");
 var Graph = require("graphlib").Graph;
 var List = require("./data/list");
@@ -450,7 +430,7 @@ function assignBucket(buckets, zeroIdx, entry) {
   }
 }
 
-},{"./data/list":5,"./graphlib":7,"./lodash":10}],9:[function(require,module,exports){
+},{"./data/list":5,"graphlib":undefined,"lodash":undefined}],8:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -847,54 +827,7 @@ function canonicalize(attrs) {
   return newAttrs;
 }
 
-},{"./acyclic":2,"./add-border-segments":3,"./coordinate-system":4,"./graphlib":7,"./lodash":10,"./nesting-graph":11,"./normalize":12,"./order":17,"./parent-dummy-chains":22,"./position":24,"./rank":26,"./util":29}],10:[function(require,module,exports){
-// eslint-disable-next-line no-redeclare
-/* global window */
-
-var lodash;
-
-if (typeof require === "function") {
-  try {
-    lodash = {
-      cloneDeep: require("lodash/cloneDeep"),
-      constant: require("lodash/constant"),
-      defaults: require("lodash/defaults"),
-      each: require("lodash/each"),
-      filter: require("lodash/filter"),
-      find: require("lodash/find"),
-      flatten: require("lodash/flatten"),
-      forEach: require("lodash/forEach"),
-      forIn: require("lodash/forIn"),
-      has:  require("lodash/has"),
-      isUndefined: require("lodash/isUndefined"),
-      last: require("lodash/last"),
-      map: require("lodash/map"),
-      mapValues: require("lodash/mapValues"),
-      max: require("lodash/max"),
-      merge: require("lodash/merge"),
-      min: require("lodash/min"),
-      minBy: require("lodash/minBy"),
-      now: require("lodash/now"),
-      pick: require("lodash/pick"),
-      range: require("lodash/range"),
-      reduce: require("lodash/reduce"),
-      sortBy: require("lodash/sortBy"),
-      uniqueId: require("lodash/uniqueId"),
-      values: require("lodash/values"),
-      zipObject: require("lodash/zipObject"),
-    };
-  } catch (e) {
-    // continue regardless of error
-  }
-}
-
-if (!lodash) {
-  lodash = window._;
-}
-
-module.exports = lodash;
-
-},{"lodash/cloneDeep":undefined,"lodash/constant":undefined,"lodash/defaults":undefined,"lodash/each":undefined,"lodash/filter":undefined,"lodash/find":undefined,"lodash/flatten":undefined,"lodash/forEach":undefined,"lodash/forIn":undefined,"lodash/has":undefined,"lodash/isUndefined":undefined,"lodash/last":undefined,"lodash/map":undefined,"lodash/mapValues":undefined,"lodash/max":undefined,"lodash/merge":undefined,"lodash/min":undefined,"lodash/minBy":undefined,"lodash/now":undefined,"lodash/pick":undefined,"lodash/range":undefined,"lodash/reduce":undefined,"lodash/sortBy":undefined,"lodash/uniqueId":undefined,"lodash/values":undefined,"lodash/zipObject":undefined}],11:[function(require,module,exports){
+},{"./acyclic":2,"./add-border-segments":3,"./coordinate-system":4,"./nesting-graph":9,"./normalize":10,"./order":15,"./parent-dummy-chains":20,"./position":22,"./rank":24,"./util":27,"graphlib":undefined,"lodash":undefined}],9:[function(require,module,exports){
 var _ = require("lodash");
 var util = require("./util");
 
@@ -1028,7 +961,7 @@ function cleanup(g) {
   });
 }
 
-},{"./lodash":10,"./util":29}],12:[function(require,module,exports){
+},{"./util":27,"lodash":undefined}],10:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -1120,7 +1053,7 @@ function undo(g) {
   });
 }
 
-},{"./lodash":10,"./util":29}],13:[function(require,module,exports){
+},{"./util":27,"lodash":undefined}],11:[function(require,module,exports){
 var _ = require("lodash");
 
 module.exports = addSubgraphConstraints;
@@ -1175,7 +1108,7 @@ function addSubgraphConstraints(g, cg, vs) {
   */
 }
 
-},{"../lodash":10}],14:[function(require,module,exports){
+},{"lodash":undefined}],12:[function(require,module,exports){
 var _ = require("lodash");
 
 module.exports = barycenter;
@@ -1205,7 +1138,7 @@ function barycenter(g, movable) {
 }
 
 
-},{"../lodash":10}],15:[function(require,module,exports){
+},{"lodash":undefined}],13:[function(require,module,exports){
 var _ = require("lodash");
 var Graph = require("graphlib").Graph;
 
@@ -1280,7 +1213,7 @@ function createRootNode(g) {
   return v;
 }
 
-},{"../graphlib":7,"../lodash":10}],16:[function(require,module,exports){
+},{"graphlib":undefined,"lodash":undefined}],14:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -1349,7 +1282,7 @@ function twoLayerCrossCount(g, northLayer, southLayer) {
   return cc;
 }
 
-},{"../lodash":10}],17:[function(require,module,exports){
+},{"lodash":undefined}],15:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -1430,7 +1363,7 @@ function assignOrder(g, layering) {
   });
 }
 
-},{"../graphlib":7,"../lodash":10,"../util":29,"./add-subgraph-constraints":13,"./build-layer-graph":15,"./cross-count":16,"./init-order":18,"./sort-subgraph":20}],18:[function(require,module,exports){
+},{"../util":27,"./add-subgraph-constraints":11,"./build-layer-graph":13,"./cross-count":14,"./init-order":16,"./sort-subgraph":18,"graphlib":undefined,"lodash":undefined}],16:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -1470,7 +1403,7 @@ function initOrder(g) {
   return layers;
 }
 
-},{"../lodash":10}],19:[function(require,module,exports){
+},{"lodash":undefined}],17:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -1594,7 +1527,7 @@ function mergeEntries(target, source) {
   source.merged = true;
 }
 
-},{"../lodash":10}],20:[function(require,module,exports){
+},{"lodash":undefined}],18:[function(require,module,exports){
 var _ = require("lodash");
 var barycenter = require("./barycenter");
 var resolveConflicts = require("./resolve-conflicts");
@@ -1672,7 +1605,7 @@ function mergeBarycenters(target, other) {
   }
 }
 
-},{"../lodash":10,"./barycenter":14,"./resolve-conflicts":19,"./sort":21}],21:[function(require,module,exports){
+},{"./barycenter":12,"./resolve-conflicts":17,"./sort":19,"lodash":undefined}],19:[function(require,module,exports){
 var _ = require("lodash");
 var util = require("../util");
 
@@ -1731,7 +1664,7 @@ function compareWithBias(bias) {
   };
 }
 
-},{"../lodash":10,"../util":29}],22:[function(require,module,exports){
+},{"../util":27,"lodash":undefined}],20:[function(require,module,exports){
 var _ = require("lodash");
 
 module.exports = parentDummyChains;
@@ -1819,7 +1752,7 @@ function postorder(g) {
   return result;
 }
 
-},{"./lodash":10}],23:[function(require,module,exports){
+},{"lodash":undefined}],21:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -2244,7 +2177,7 @@ function width(g, v) {
   return g.node(v).width;
 }
 
-},{"../graphlib":7,"../lodash":10,"../util":29}],24:[function(require,module,exports){
+},{"../util":27,"graphlib":undefined,"lodash":undefined}],22:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -2276,7 +2209,7 @@ function positionY(g) {
 }
 
 
-},{"../lodash":10,"../util":29,"./bk":23}],25:[function(require,module,exports){
+},{"../util":27,"./bk":21,"lodash":undefined}],23:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -2367,7 +2300,7 @@ function shiftRanks(t, g, delta) {
   });
 }
 
-},{"../graphlib":7,"../lodash":10,"./util":28}],26:[function(require,module,exports){
+},{"./util":26,"graphlib":undefined,"lodash":undefined}],24:[function(require,module,exports){
 "use strict";
 
 var rankUtil = require("./util");
@@ -2417,7 +2350,7 @@ function networkSimplexRanker(g) {
   networkSimplex(g);
 }
 
-},{"./feasible-tree":25,"./network-simplex":27,"./util":28}],27:[function(require,module,exports){
+},{"./feasible-tree":23,"./network-simplex":25,"./util":26}],25:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -2653,7 +2586,7 @@ function isDescendant(tree, vLabel, rootLabel) {
   return rootLabel.low <= vLabel.lim && vLabel.lim <= rootLabel.lim;
 }
 
-},{"../graphlib":7,"../lodash":10,"../util":29,"./feasible-tree":25,"./util":28}],28:[function(require,module,exports){
+},{"../util":27,"./feasible-tree":23,"./util":26,"graphlib":undefined,"lodash":undefined}],26:[function(require,module,exports){
 "use strict";
 
 var _ = require("lodash");
@@ -2718,7 +2651,7 @@ function slack(g, e) {
   return g.node(e.w).rank - g.node(e.v).rank - g.edge(e).minlen;
 }
 
-},{"../lodash":10}],29:[function(require,module,exports){
+},{"lodash":undefined}],27:[function(require,module,exports){
 /* eslint "no-console": off */
 
 "use strict";
@@ -2958,7 +2891,7 @@ function notime(name, fn) {
   return fn();
 }
 
-},{"./graphlib":7,"./lodash":10}],30:[function(require,module,exports){
+},{"graphlib":undefined,"lodash":undefined}],28:[function(require,module,exports){
 module.exports = "0.8.10";
 
 },{}]},{},[1])(1)
