@@ -2892,7 +2892,7 @@ function notime(name, fn) {
 }
 
 },{"graphlib":undefined,"lodash":undefined}],28:[function(require,module,exports){
-module.exports = "0.8.10";
+module.exports = "0.8.12";
 
 },{}]},{},[1])(1)
 });
