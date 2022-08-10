@@ -1,6 +1,6 @@
 {
   "name": "@neo4j-bloom/dagre",
-  "version": "0.8.13",
+  "version": "0.8.14",
   "description": "Graph layout for JavaScript",
   "author": "Chris Pettitt <cpettitt@gmail.com>",
   "contributors": [
