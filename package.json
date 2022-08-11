@@ -1,6 +1,6 @@
 {
-  "name": "neo4j-dagre",
-  "version": "0.8.12",
+  "name": "@neo4j-bloom/dagre",
+  "version": "0.8.14",
   "description": "Graph layout for JavaScript",
   "author": "Chris Pettitt <cpettitt@gmail.com>",
   "contributors": [
@@ -13,7 +13,6 @@
     "layout"
   ],
   "publishConfig": {
-    "registry": "https://neo.jfrog.io/neo/api/npm/npm-local"
   },
   "files": [
     "index.js",

@@ -1,8 +1,8 @@
 {
-  "name": "neo4j-dagre",
-  "version": "0.8.12",
+  "name": "dagre",
+  "version": "0.8.13",
   "main": [
-    "dist/neo4j-dagre.core.js"
+    "dist/dagre.core.js"
   ],
   "ignore": [
     ".*",
@@ -10,8 +10,8 @@
     "CHANGELOG.md",
     "Makefile",
     "browser.js",
-    "dist/neo4j-dagre.js",
-    "dist/neo4j-dagre.min.js",
+    "dist/dagre.js",
+    "dist/dagre.min.js",
     "index.js",
     "karma*",
     "lib/**",
