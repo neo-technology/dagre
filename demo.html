@@ -271,6 +271,26 @@
             pointer-events: none;
         }
 
+        .cluster rect {
+            fill: #ecf0f1;
+            stroke: #bdc3c7;
+            stroke-width: 2px;
+            stroke-dasharray: 6 3;
+        }
+
+        .cluster text {
+            fill: #7f8c8d;
+            font-size: 12px;
+            font-weight: 600;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .cluster-lr rect { stroke: #9b59b6; fill: #f5eef8; }
+        .cluster-tb rect { stroke: #27ae60; fill: #eafaf1; }
+        .cluster-bt rect { stroke: #e67e22; fill: #fef9e7; }
+        .cluster-rl rect { stroke: #e74c3c; fill: #fdedec; }
+
         path.edge {
             fill: none;
             stroke: #7f8c8d;
@@ -337,6 +357,8 @@
                     <option value="horizontal">Horizontal Layout</option>
                     <option value="complex">Complex Network</option>
                     <option value="cycles">Graph with Cycles</option>
+                    <option value="perClusterSimple">Per-Cluster Direction</option>
+                    <option value="perClusterComplex">CI/CD Pipeline (Multi-Cluster)</option>
                 </select>
             </div>
 
@@ -385,6 +407,7 @@
                             </marker>
                         </defs>
                         <g class="viewport">
+                            <g class="clusters"></g>
                             <g class="edges"></g>
                             <g class="nodes"></g>
                         </g>
@@ -412,6 +435,7 @@
         };
 
         let currentExample = 'simple';
+        let clusterDirections = {}; // { "exampleKey:nodeId": "LR" }
 
         // Example definitions
         const examples = {
@@ -599,6 +623,211 @@ dagre.layout(g);`,
                 }
             },
 
+            perClusterSimple: {
+                name: 'Per-Cluster Direction (New Feature)',
+                description: 'Global TB graph with LR clusters — each subgraph lays out horizontally inside a vertical flow',
+                code: `const g = new dagre.graphlib.Graph({ compound: true });
+
+// Global layout: Top-to-Bottom
+g.setGraph({ rankdir: "TB", nodesep: 50, ranksep: 60 });
+g.setDefaultEdgeLabel(() => ({}));
+
+g.setNode("start", { width: 80, height: 40, label: "Start" });
+g.setNode("end",   { width: 80, height: 40, label: "End" });
+
+// Cluster "build" flows Left-to-Right internally
+g.setNode("build",   { rankdir: "LR", label: "Build Pipeline" });
+g.setNode("lint",    { width: 80, height: 40, label: "Lint" });
+g.setNode("compile", { width: 80, height: 40, label: "Compile" });
+g.setNode("bundle",  { width: 80, height: 40, label: "Bundle" });
+g.setParent("lint",    "build");
+g.setParent("compile", "build");
+g.setParent("bundle",  "build");
+g.setEdge("lint", "compile");
+g.setEdge("compile", "bundle");
+
+// Cluster "test" also flows Left-to-Right internally
+g.setNode("test",        { rankdir: "LR", label: "Test Suite" });
+g.setNode("unit",        { width: 80,  height: 40, label: "Unit" });
+g.setNode("integration", { width: 100, height: 40, label: "Integration" });
+g.setParent("unit",        "test");
+g.setParent("integration", "test");
+g.setEdge("unit", "integration");
+
+// Top-level connections
+g.setEdge("start",       "lint");
+g.setEdge("bundle",      "unit");
+g.setEdge("bundle",      "integration");
+g.setEdge("integration", "end");
+
+dagre.layout(g);`,
+                buildGraph: function() {
+                    const g = new dagre.graphlib.Graph({ compound: true });
+                    g.setGraph({
+                        rankdir: currentSettings.direction,
+                        nodesep: currentSettings.nodeSpacing,
+                        ranksep: currentSettings.rankSpacing
+                    });
+                    g.setDefaultEdgeLabel(() => ({}));
+
+                    g.setNode("start", { width: 80, height: 40, label: "Start" });
+                    g.setNode("end",   { width: 80, height: 40, label: "End" });
+
+                    g.setNode("build",   { rankdir: "LR", label: "Build Pipeline" });
+                    g.setNode("lint",    { width: 80, height: 40, label: "Lint" });
+                    g.setNode("compile", { width: 80, height: 40, label: "Compile" });
+                    g.setNode("bundle",  { width: 80, height: 40, label: "Bundle" });
+                    g.setParent("lint",    "build");
+                    g.setParent("compile", "build");
+                    g.setParent("bundle",  "build");
+                    g.setEdge("lint", "compile");
+                    g.setEdge("compile", "bundle");
+
+                    g.setNode("test",        { rankdir: "LR", label: "Test Suite" });
+                    g.setNode("unit",        { width: 80,  height: 40, label: "Unit" });
+                    g.setNode("integration", { width: 100, height: 40, label: "Integration" });
+                    g.setParent("unit",        "test");
+                    g.setParent("integration", "test");
+                    g.setEdge("unit", "integration");
+
+                    g.setEdge("start",       "lint");
+                    g.setEdge("bundle",      "unit");
+                    g.setEdge("bundle",      "integration");
+                    g.setEdge("integration", "end");
+
+                    return g;
+                }
+            },
+
+            perClusterComplex: {
+                name: 'CI/CD Pipeline (Multi-Cluster)',
+                description: 'Complex compound graph: TB overall with multiple LR clusters and cross-cluster edges',
+                code: `const g = new dagre.graphlib.Graph({ compound: true });
+
+// Global layout: Top-to-Bottom
+g.setGraph({ rankdir: "TB", nodesep: 60, ranksep: 80 });
+g.setDefaultEdgeLabel(() => ({}));
+
+// Entry / exit
+g.setNode("trigger", { width: 90, height: 40, label: "Trigger" });
+g.setNode("notify",  { width: 90, height: 40, label: "Notify" });
+g.setNode("deploy",  { width: 90, height: 40, label: "Deploy" });
+
+// Cluster: Source — flows LR
+g.setNode("source",   { rankdir: "LR", label: "Source" });
+g.setNode("checkout", { width: 90, height: 40, label: "Checkout" });
+g.setNode("deps",     { width: 90, height: 40, label: "Install Deps" });
+g.setParent("checkout", "source");
+g.setParent("deps",     "source");
+g.setEdge("checkout", "deps");
+
+// Cluster: Quality — flows LR
+g.setNode("quality", { rankdir: "LR", label: "Quality Gates" });
+g.setNode("lint2",   { width: 80, height: 40, label: "Lint" });
+g.setNode("types",   { width: 80, height: 40, label: "Typecheck" });
+g.setNode("audit",   { width: 80, height: 40, label: "Audit" });
+g.setParent("lint2", "quality");
+g.setParent("types", "quality");
+g.setParent("audit", "quality");
+g.setEdge("lint2", "types");
+g.setEdge("types", "audit");
+
+// Cluster: Build — flows LR
+g.setNode("build2",   { rankdir: "LR", label: "Build" });
+g.setNode("compile2", { width: 90, height: 40, label: "Compile" });
+g.setNode("bundle2",  { width: 90, height: 40, label: "Bundle" });
+g.setNode("assets",   { width: 90, height: 40, label: "Assets" });
+g.setParent("compile2", "build2");
+g.setParent("bundle2",  "build2");
+g.setParent("assets",   "build2");
+g.setEdge("compile2", "bundle2");
+g.setEdge("bundle2",  "assets");
+
+// Cluster: Tests — flows LR
+g.setNode("tests",       { rankdir: "LR", label: "Tests" });
+g.setNode("unit2",       { width: 80,  height: 40, label: "Unit" });
+g.setNode("e2e",         { width: 80,  height: 40, label: "E2E" });
+g.setNode("perf",        { width: 80,  height: 40, label: "Perf" });
+g.setParent("unit2", "tests");
+g.setParent("e2e",   "tests");
+g.setParent("perf",  "tests");
+g.setEdge("unit2", "e2e");
+g.setEdge("e2e",   "perf");
+
+// Cross-cluster edges
+g.setEdge("trigger",  "checkout");
+g.setEdge("deps",     "lint2");
+g.setEdge("deps",     "compile2");
+g.setEdge("audit",    "unit2");
+g.setEdge("assets",   "unit2");
+g.setEdge("perf",     "deploy");
+g.setEdge("deploy",   "notify");
+g.setEdge("audit",    "notify", { label: "fail", width: 30, height: 20 });
+
+dagre.layout(g);`,
+                buildGraph: function() {
+                    const g = new dagre.graphlib.Graph({ compound: true });
+                    g.setGraph({
+                        rankdir: currentSettings.direction,
+                        nodesep: currentSettings.nodeSpacing,
+                        ranksep: currentSettings.rankSpacing
+                    });
+                    g.setDefaultEdgeLabel(() => ({}));
+
+                    g.setNode("trigger", { width: 90, height: 40, label: "Trigger" });
+                    g.setNode("notify",  { width: 90, height: 40, label: "Notify" });
+                    g.setNode("deploy",  { width: 90, height: 40, label: "Deploy" });
+
+                    g.setNode("source",   { rankdir: "LR", label: "Source" });
+                    g.setNode("checkout", { width: 90, height: 40, label: "Checkout" });
+                    g.setNode("deps",     { width: 90, height: 40, label: "Install Deps" });
+                    g.setParent("checkout", "source");
+                    g.setParent("deps",     "source");
+                    g.setEdge("checkout", "deps");
+
+                    g.setNode("quality", { rankdir: "LR", label: "Quality Gates" });
+                    g.setNode("lint2",   { width: 80, height: 40, label: "Lint" });
+                    g.setNode("types",   { width: 80, height: 40, label: "Typecheck" });
+                    g.setNode("audit",   { width: 80, height: 40, label: "Audit" });
+                    g.setParent("lint2", "quality");
+                    g.setParent("types", "quality");
+                    g.setParent("audit", "quality");
+                    g.setEdge("lint2", "types");
+                    g.setEdge("types", "audit");
+
+                    g.setNode("build2",   { rankdir: "LR", label: "Build" });
+                    g.setNode("compile2", { width: 90, height: 40, label: "Compile" });
+                    g.setNode("bundle2",  { width: 90, height: 40, label: "Bundle" });
+                    g.setNode("assets",   { width: 90, height: 40, label: "Assets" });
+                    g.setParent("compile2", "build2");
+                    g.setParent("bundle2",  "build2");
+                    g.setParent("assets",   "build2");
+                    g.setEdge("compile2", "bundle2");
+                    g.setEdge("bundle2",  "assets");
+
+                    g.setNode("tests",  { rankdir: "LR", label: "Tests" });
+                    g.setNode("unit2",  { width: 80, height: 40, label: "Unit" });
+                    g.setNode("e2e",    { width: 80, height: 40, label: "E2E" });
+                    g.setNode("perf",   { width: 80, height: 40, label: "Perf" });
+                    g.setParent("unit2", "tests");
+                    g.setParent("e2e",   "tests");
+                    g.setParent("perf",  "tests");
+                    g.setEdge("unit2", "e2e");
+                    g.setEdge("e2e",   "perf");
+
+                    g.setEdge("trigger",  "checkout");
+                    g.setEdge("deps",     "lint2");
+                    g.setEdge("deps",     "compile2");
+                    g.setEdge("audit",    "unit2");
+                    g.setEdge("assets",   "unit2");
+                    g.setEdge("perf",     "deploy");
+                    g.setEdge("deploy",   "notify");
+                    g.setEdge("audit",    "notify", { label: "fail", width: 30, height: 20 });
+
+                    return g;
+                }
+            },
+
             cycles: {
                 name: 'Graph with Cycles',
                 description: 'Demonstrates cycle handling and backward edges',
@@ -660,6 +889,19 @@ dagre.layout(g);`,
             }
         };
 
+        // Find the point where a line from node toward other exits node's bounding rect
+        function rectBorderPoint(node, other) {
+            const dx = other.x - node.x;
+            const dy = other.y - node.y;
+            if (dx === 0 && dy === 0) return { x: node.x, y: node.y };
+            const hw = node.width / 2, hh = node.height / 2;
+            const scale = Math.min(
+                dx !== 0 ? hw / Math.abs(dx) : Infinity,
+                dy !== 0 ? hh / Math.abs(dy) : Infinity
+            );
+            return { x: node.x + dx * scale, y: node.y + dy * scale };
+        }
+
         // Syntax highlighting function
         function highlightCode(code) {
             return code
@@ -678,28 +920,46 @@ dagre.layout(g);`,
             // Get SVG elements
             const svg = d3.select('#graph-svg');
             const viewport = svg.select('.viewport');
+            const clustersGroup = viewport.select('.clusters');
             const nodesGroup = viewport.select('.nodes');
             const edgesGroup = viewport.select('.edges');
 
             // Clear previous content
+            clustersGroup.selectAll('*').remove();
             nodesGroup.selectAll('*').remove();
             edgesGroup.selectAll('*').remove();
+
+            const isCompound = typeof graph.isCompound === 'function' && graph.isCompound();
+            const isCluster = v => isCompound && graph.children(v).length > 0;
 
             // Render edges
             graph.edges().forEach(e => {
                 const edge = graph.edge(e);
+                const sourceNode = graph.node(e.v);
+                const targetNode = graph.node(e.w);
 
-                if (!edge || !edge.points || edge.points.length === 0) {
-                    console.warn('Edge missing points:', e, edge);
-                    return;
+                if (!edge || !sourceNode || !targetNode) return;
+
+                let points;
+                let labelX, labelY;
+
+                if (isCompound) {
+                    // Node positions were updated by applyClusterDirections after dagre
+                    // computed edge routing, so edge.points are stale — recompute from
+                    // final node positions.
+                    const src = rectBorderPoint(sourceNode, targetNode);
+                    const tgt = rectBorderPoint(targetNode, sourceNode);
+                    points = [src, tgt];
+                    labelX = (src.x + tgt.x) / 2;
+                    labelY = (src.y + tgt.y) / 2;
+                } else {
+                    if (!edge.points || edge.points.length === 0) return;
+                    points = edge.points;
+                    labelX = edge.x;
+                    labelY = edge.y;
                 }
 
-                const points = edge.points;
-
-                // Create edge path (dagre provides the points, just connect them)
-                const line = d3.line()
-                    .x(d => d.x)
-                    .y(d => d.y);
+                const line = d3.line().x(d => d.x).y(d => d.y);
 
                 edgesGroup.append('path')
                     .attr('class', 'edge')
@@ -707,10 +967,10 @@ dagre.layout(g);`,
                     .attr('marker-end', 'url(#arrowhead)');
 
                 // Add edge label if present
-                if (edge.label && edge.x !== undefined && edge.y !== undefined) {
+                if (edge.label && labelX !== undefined && labelY !== undefined) {
                     const labelGroup = edgesGroup.append('g')
                         .attr('class', 'edge-label')
-                        .attr('transform', `translate(${edge.x}, ${edge.y})`);
+                        .attr('transform', `translate(${labelX}, ${labelY})`);
 
                     const text = labelGroup.append('text')
                         .text(edge.label)
@@ -728,22 +988,78 @@ dagre.layout(g);`,
                 }
             });
 
-            // Render nodes
-            graph.nodes().forEach(v => {
+            // Render nodes — clusters first (background), then leaf nodes
+
+            const sortedNodes = graph.nodes().slice().sort((a, b) => {
+                // clusters before leaves so they render behind
+                return (isCluster(b) ? 1 : 0) - (isCluster(a) ? 1 : 0);
+            });
+
+            sortedNodes.forEach(v => {
                 const node = graph.node(v);
-                const nodeGroup = nodesGroup.append('g')
-                    .attr('class', 'node')
-                    .attr('transform', `translate(${node.x}, ${node.y})`);
+                if (isCluster(v)) {
+                    const rankdir = (node.rankdir || 'TB').toLowerCase();
+                    const clusterGroup = clustersGroup.append('g')
+                        .attr('class', `cluster cluster-${rankdir}`)
+                        .attr('transform', `translate(${node.x}, ${node.y})`);
 
-                nodeGroup.append('rect')
-                    .attr('x', -node.width / 2)
-                    .attr('y', -node.height / 2)
-                    .attr('width', node.width)
-                    .attr('height', node.height);
+                    clusterGroup.append('rect')
+                        .attr('x', -node.width / 2)
+                        .attr('y', -node.height / 2)
+                        .attr('width', node.width)
+                        .attr('height', node.height)
+                        .attr('rx', 6);
 
-                nodeGroup.append('text')
-                    .attr('dy', '0.35em')
-                    .text(node.label || v);
+                    clusterGroup.append('text')
+                        .attr('y', -node.height / 2 + 14)
+                        .text(node.label || v);
+
+                    // Direction dropdown
+                    const foW = 58, foH = 22;
+                    const fo = clusterGroup.append('foreignObject')
+                        .attr('x', node.width / 2 - foW - 6)
+                        .attr('y', -node.height / 2 + 3)
+                        .attr('width', foW)
+                        .attr('height', foH);
+
+                    const sel = fo.append('xhtml:select')
+                        .style('width', '100%')
+                        .style('height', '100%')
+                        .style('font-size', '11px')
+                        .style('padding', '1px 4px')
+                        .style('border', '1px solid #bdc3c7')
+                        .style('border-radius', '3px')
+                        .style('background', 'white')
+                        .style('cursor', 'pointer');
+
+                    const currentDir = (node.rankdir || 'TB').toUpperCase();
+                    ['TB', 'BT', 'LR', 'RL'].forEach(dir => {
+                        sel.append('xhtml:option')
+                            .attr('value', dir)
+                            .property('selected', dir === currentDir)
+                            .text(dir);
+                    });
+
+                    const clusterId = v;
+                    sel.on('change', function() {
+                        clusterDirections[`${currentExample}:${clusterId}`] = this.value;
+                        loadExample(currentExample);
+                    });
+                } else {
+                    const nodeGroup = nodesGroup.append('g')
+                        .attr('class', 'node')
+                        .attr('transform', `translate(${node.x}, ${node.y})`);
+
+                    nodeGroup.append('rect')
+                        .attr('x', -node.width / 2)
+                        .attr('y', -node.height / 2)
+                        .attr('width', node.width)
+                        .attr('height', node.height);
+
+                    nodeGroup.append('text')
+                        .attr('dy', '0.35em')
+                        .text(node.label || v);
+                }
             });
 
             // Calculate graph bounds
@@ -806,8 +1122,16 @@ dagre.layout(g);`,
             // Update code display
             document.getElementById('code-display').innerHTML = highlightCode(example.code);
 
-            // Build and render graph
+            // Build and render graph, applying any per-cluster direction overrides
             const graph = example.buildGraph();
+            if (typeof graph.isCompound === 'function' && graph.isCompound()) {
+                graph.nodes().forEach(v => {
+                    if (graph.children(v).length > 0) {
+                        const override = clusterDirections[`${exampleKey}:${v}`];
+                        if (override) graph.node(v).rankdir = override;
+                    }
+                });
+            }
             renderGraph(graph);
         }
 

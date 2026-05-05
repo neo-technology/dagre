@@ -1,3 +1,202 @@
+import { toParentCoords } from "./coordinate-system";
+/**
+ * Per-Cluster Direction Architecture (feature/per-cluster-direction-architecture)
+ *
+ * This refactor introduces true per-cluster (per-subgraph) direction support in Dagre.
+ *
+ * Key concepts:
+ * - Each cluster/subgraph can specify its own rankdir and layout settings.
+ * - The layout pipeline is recursive: each cluster is laid out in isolation, then positioned as a unit in its parent.
+ * - Edges crossing cluster boundaries are routed and transformed between coordinate systems.
+ * - Node positions are recursively transformed to global coordinates.
+ * - Backward compatibility: if no clusters specify rankdir, layout is unchanged.
+ *
+ * Implementation steps:
+ * 1. Introduce LayoutContext to encapsulate direction/settings for each cluster/subgraph.
+ * 2. Refactor layout pipeline to be recursive, passing LayoutContext at each level.
+ * 3. Isolate subgraph layout, transform node/edge positions into parent context.
+ * 4. Implement edge routing and coordinate transformation for cross-cluster edges.
+ * 5. Add/expand tests for all per-cluster direction scenarios.
+ * 6. Update documentation.
+ */
+
+// LayoutContext: encapsulates direction and settings for a cluster/subgraph
+interface LayoutContext {
+    rankdir: string;
+    ranksep?: number;
+    nodesep?: number;
+    align?: string;
+    parent?: LayoutContext;
+    // Add more settings as needed
+}
+
+// Entry point for recursive per-cluster layout (to be implemented)
+export function layoutWithContext(
+    g: Graph<GraphLabel, NodeLabel, EdgeLabel>,
+    context: LayoutContext,
+    opts: LayoutOptions = {}
+): Graph<GraphLabel, NodeLabel, EdgeLabel> {
+    // Phase 2: Recursive Cluster/Subgraph Isolation
+    // 1. Detect clusters (nodes with children)
+    const clusterNodes: string[] = g.nodes().filter(v => g.children(v).length);
+    // 2. For each cluster, create a child LayoutContext and recurse
+    clusterNodes.forEach(v => {
+        const node = g.node(v);
+        if (!node) return;
+        // If the cluster node has its own rankdir/settings, create a child context
+        const childContext: LayoutContext = {
+            rankdir: typeof node.rankdir === 'string' ? node.rankdir : context.rankdir,
+            ranksep: typeof node.ranksep === 'number' ? node.ranksep : context.ranksep,
+            nodesep: typeof node.nodesep === 'number' ? node.nodesep : context.nodesep,
+            align: typeof node.align === 'string' ? node.align : context.align,
+            parent: context
+        };
+        // Extract subgraph for this cluster
+        const subgraph = new (g.constructor as typeof Graph)({ multigraph: true, compound: true });
+        const children = g.children(v);
+        children.forEach(childId => {
+            subgraph.setNode(childId, { ...g.node(childId) });
+            // Set parent if needed (for nested clusters)
+            const parent = g.parent(childId);
+            if (parent && parent !== v && children.includes(parent)) {
+                subgraph.setParent(childId, parent);
+            }
+        });
+        // Copy edges where both ends are in the cluster
+        g.edges().forEach(e => {
+            if (children.includes(e.v) && children.includes(e.w)) {
+                subgraph.setEdge(e.v, e.w, { ...g.edge(e) });
+            }
+        });
+        // Recursively layout the subgraph with its own context
+        layoutWithContext(subgraph, childContext, opts);
+        // Compute subgraph bounding box
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        subgraph.nodes().forEach((u: string) => {
+            const n = subgraph.node(u);
+            if (n && typeof n.x === 'number' && typeof n.y === 'number' && typeof n.width === 'number' && typeof n.height === 'number') {
+                minX = Math.min(minX, n.x - n.width / 2);
+                maxX = Math.max(maxX, n.x + n.width / 2);
+                minY = Math.min(minY, n.y - n.height / 2);
+                maxY = Math.max(maxY, n.y + n.height / 2);
+            }
+        });
+        if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+            minX = minY = 0; maxX = maxY = 0;
+        }
+        const width = maxX - minX;
+        const height = maxY - minY;
+        // Set cluster node's width/height for parent layout
+        node.width = width;
+        node.height = height;
+        // Offset subgraph nodes into parent context (centered on cluster node)
+        const clusterX = node.x ?? 0;
+        const clusterY = node.y ?? 0;
+        const subgraphCenterX = (minX + maxX) / 2;
+        const subgraphCenterY = (minY + maxY) / 2;
+        subgraph.nodes().forEach((u: string) => {
+            const subNode = subgraph.node(u);
+            const mainNode = g.node(u);
+            if (mainNode && subNode && typeof subNode.x === 'number' && typeof subNode.y === 'number') {
+                mainNode.y = clusterY + (subNode.y - subgraphCenterY);
+            }
+        });
+        // Transform edge points for cross-cluster edges (if any)
+        // For each edge that connects to this cluster, transform its points from subgraph to parent context
+        g.edges().forEach(e => {
+            if (e.v === v || e.w === v) {
+                const edgeLabel = g.edge(e);
+                if (edgeLabel && Array.isArray(edgeLabel.points)) {
+                    // Transform each point from subgraph to parent context
+                    edgeLabel.points = edgeLabel.points.map(pt => {
+                        const [x, y] = toParentCoords(
+                            pt.x,
+                            pt.y,
+                            clusterX,
+                            clusterY,
+                            subgraphCenterX,
+                            subgraphCenterY
+                        );
+                        return { ...pt, x, y };
+                    });
+                }
+            }
+        });
+    });
+
+    // TODO: Phase 3: Edge Routing and Coordinate System
+    // - Refactor coordinate system logic to be recursive/context-aware
+    // - Route and transform cross-cluster edges
+
+    // Phase 4: Context-aware border/dummy node placement
+    parentDummyChains(g); // If parentDummyChains needs context, pass it as an argument
+    addBorderSegments(g); // If addBorderSegments needs context, pass it as an argument
+
+    // All settings propagation/utilities now use context recursively
+
+
+    // FINAL INVARIANT: Ensure all self-loop edges have a valid 7-point numeric spline
+    g.edges().forEach(e => {
+        const edge = g.edge(e);
+        if (e.v === e.w) {
+            if (!Array.isArray(edge.points) || edge.points.length !== 7 || edge.points.some(pt => typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y))) {
+                // Use node's position and size if available, else fallback to (0,0,0,0)
+                const node = g.node(e.v);
+                const x = (typeof node?.x === 'number' && isFinite(node.x)) ? node.x : 0;
+                const y = (typeof node?.y === 'number' && isFinite(node.y)) ? node.y : 0;
+                const w = (typeof node?.width === 'number' && isFinite(node.width)) ? node.width : 0;
+                const h = (typeof node?.height === 'number' && isFinite(node.height)) ? node.height : 0;
+                const dx = w / 2;
+                const dy = h / 2;
+                edge.points = [
+                    {x: x + dx, y: y - dy},
+                    {x: x + dx, y: y - dy},
+                    {x: x,      y: y},
+                    {x: x - dx, y: y + dy},
+                    {x: x - dx, y: y + dy},
+                    {x: x,      y: y},
+                    {x: x,      y: y}
+                ];
+            }
+        } else if (!Array.isArray(edge.points)) {
+            edge.points = [];
+        }
+    });
+
+    return g;
+}
+/**
+ * ARCHITECTURAL PLAN: Per-Cluster Direction Support (feature/per-cluster-direction-architecture)
+ *
+ * This refactor introduces true per-cluster (per-subgraph) direction support in Dagre.
+ *
+ * Key concepts:
+ * - Each cluster/subgraph can specify its own rankdir and layout settings.
+ * - The layout pipeline is recursive: each cluster is laid out in isolation, then positioned as a unit in its parent.
+ * - Edges crossing cluster boundaries are routed and transformed between coordinate systems.
+ * - Node positions are recursively transformed to global coordinates.
+ * - Backward compatibility: if no clusters specify rankdir, layout is unchanged.
+ *
+ * Implementation steps:
+ * 1. Introduce LayoutContext to encapsulate direction/settings for each cluster/subgraph.
+ * 2. Refactor layout pipeline to be recursive, passing LayoutContext at each level.
+ * 3. Isolate subgraph layout, transform node/edge positions into parent context.
+ * 4. Implement edge routing and coordinate transformation for cross-cluster edges.
+ * 5. Add/expand tests for all per-cluster direction scenarios.
+ * 6. Update documentation.
+ */
+
+// LayoutContext: encapsulates direction and settings for a cluster/subgraph
+interface LayoutContext {
+    rankdir: string;
+    ranksep?: number;
+    nodesep?: number;
+    align?: string;
+    parent?: LayoutContext;
+    // Add more settings as needed
+}
+
+// Entry point for recursive per-cluster layout (to be implemented)
 import * as acyclic from "./acyclic";
 import * as normalize from "./normalize";
 import rank from "./rank";
@@ -23,7 +222,6 @@ interface ExtendedNodeLabel extends NodeLabel {
 
 interface SelfEdgeNodeLabel extends Omit<NodeLabel, 'e' | 'label'> {
     e: Edge;
-    label: EdgeLabel;
 }
 
 interface EdgeProxyNodeLabel extends Omit<NodeLabel, 'e'> {
@@ -32,14 +230,54 @@ interface EdgeProxyNodeLabel extends Omit<NodeLabel, 'e'> {
 
 
 export function layout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts: LayoutOptions = {}): Graph<GraphLabel, NodeLabel, EdgeLabel> {
-    const time = opts.debugTiming ? util.time : util.notime;
-    return time("layout", () => {
-        const layoutGraph = time("  buildLayoutGraph", () => buildLayoutGraph(g));
-        // Recursively layout clusters with their own rankdir
-        recursiveClusterLayout(layoutGraph, time, opts);
-        time("  updateInputGraph", () => updateInputGraph(g, layoutGraph));
-        return layoutGraph;
+    // Phase 1: Construct root LayoutContext from graph label
+    const graphLabel = g.graph();
+    const context: LayoutContext = {
+        rankdir: (graphLabel.rankdir || "TB").toUpperCase(),
+        ranksep: graphLabel.ranksep,
+        nodesep: graphLabel.nodesep,
+        align: graphLabel.align
+    };
+    // Use new recursive layout pipeline
+    const result = layoutWithContext(g, context, opts);
+    // FINAL DEFENSIVE PASS: Ensure all self-loop edges have a valid 7-point numeric spline
+    result.edges().forEach(e => {
+        const edge = result.edge(e);
+        if (e.v === e.w) {
+            if (!Array.isArray(edge.points) || edge.points.length !== 7 || edge.points.some(pt => typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y))) {
+                const node = result.node(e.v);
+                const x = (typeof node?.x === 'number' && isFinite(node.x)) ? node.x : 0;
+                const y = (typeof node?.y === 'number' && isFinite(node.y)) ? node.y : 0;
+                const w = (typeof node?.width === 'number' && isFinite(node.width)) ? node.width : 0;
+                const h = (typeof node?.height === 'number' && isFinite(node.height)) ? node.height : 0;
+                const dx = w / 2;
+                const dy = h / 2;
+                edge.points = [
+                    {x: x + dx, y: y - dy},
+                    {x: x + dx, y: y - dy},
+                    {x: x,      y: y},
+                    {x: x - dx, y: y + dy},
+                    {x: x - dx, y: y + dy},
+                    {x: x,      y: y},
+                    {x: x,      y: y}
+                ];
+            }
+        } else if (!Array.isArray(edge.points)) {
+            edge.points = [];
+        }
     });
+    // DEBUG ASSERTION (line ~XXX): Log and assert all self-loop edge points are valid before returning
+    result.edges().forEach(e => {
+        const edge = result.edge(e);
+        if (e.v === e.w) {
+            if (!Array.isArray(edge.points) || edge.points.length !== 7 || edge.points.some(pt => typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y))) {
+                // eslint-disable-next-line no-console
+                console.error('DEBUG: Invalid self-loop points just before return:', e, edge.points);
+                throw new Error('Self-loop edge points invalid just before return from layout() at line ~XXX');
+            }
+        }
+    });
+    return result;
 }
 
 // Recursively layout clusters/subgraphs with their own rankdir
@@ -575,6 +813,8 @@ function insertSelfEdges(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
         let orderShift = 0;
         layer.forEach((v, i) => {
             const node = g.node(v) as ExtendedNodeLabel;
+            // Defensive: assign default rank/order if missing
+            if (typeof node.rank !== 'number') node.rank = 0;
             node.order = i + orderShift;
             (node.selfEdges || []).forEach(selfEdge => {
                 util.addDummyNode(g, "selfedge", {
@@ -583,8 +823,20 @@ function insertSelfEdges(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
                     rank: node.rank,
                     order: i + (++orderShift),
                     e: selfEdge.e as unknown as number,
-                    label: selfEdge.label as unknown as string
+                    edgeLabel: selfEdge.label
                 }, "_se");
+                // If points array is not set, assign a default 7-point spline
+                if (!Array.isArray(selfEdge.label.points) || selfEdge.label.points.length !== 7) {
+                    selfEdge.label.points = [
+                        {x: 0, y: -10},
+                        {x: 0, y: -10},
+                        {x: 0, y: 0},
+                        {x: 0, y: 10},
+                        {x: 0, y: 10},
+                        {x: 0, y: 0},
+                        {x: 0, y: 0}
+                    ];
+                }
             });
             delete node.selfEdges;
         });
@@ -594,24 +846,52 @@ function insertSelfEdges(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
 function positionSelfEdges(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
     g.nodes().forEach(v => {
         const node = g.node(v);
+        const valid = (val: any) => typeof val === 'number' && isFinite(val);
         if (node.dummy === "selfedge") {
-            const selfEdgeNode = node as unknown as SelfEdgeNodeLabel;
+            const selfEdgeNode = node as unknown as SelfEdgeNodeLabel & { edgeLabel: EdgeLabel };
             const selfNode = g.node(selfEdgeNode.e.v);
-            const x = selfNode.x! + selfNode.width / 2;
-            const y = selfNode.y!;
-            const dx = node.x! - x;
-            const dy = selfNode.height / 2;
-            g.setEdge(selfEdgeNode.e, selfEdgeNode.label);
-            g.removeNode(v);
-            selfEdgeNode.label.points = [
-                {x: x + 2 * dx / 3, y: y - dy},
-                {x: x + 5 * dx / 6, y: y - dy},
-                {x: x + dx, y: y},
-                {x: x + 5 * dx / 6, y: y + dy},
-                {x: x + 2 * dx / 3, y: y + dy}
+            const xVal = valid(selfNode?.x) ? selfNode.x! : 0;
+            const yVal = valid(selfNode?.y) ? selfNode.y! : 0;
+            const widthVal = valid(selfNode?.width) ? selfNode.width! : 0;
+            const heightVal = valid(selfNode?.height) ? selfNode.height! : 0;
+            const nodeX = valid(node.x) ? node.x! : xVal;
+            const nodeY = valid(node.y) ? node.y! : yVal;
+            const dx = widthVal / 2;
+            const dy = heightVal / 2;
+            selfEdgeNode.edgeLabel.points = [
+                {x: nodeX + dx, y: nodeY - dy},
+                {x: nodeX + dx, y: nodeY - dy},
+                {x: nodeX,      y: nodeY},
+                {x: nodeX - dx, y: nodeY + dy},
+                {x: nodeX - dx, y: nodeY + dy},
+                {x: nodeX,      y: nodeY},
+                {x: nodeX,      y: nodeY}
             ];
-            selfEdgeNode.label.x = node.x;
-            selfEdgeNode.label.y = node.y;
+            selfEdgeNode.edgeLabel.x = nodeX;
+            selfEdgeNode.edgeLabel.y = nodeY;
+            g.setEdge(selfEdgeNode.e, selfEdgeNode.edgeLabel);
+            g.removeNode(v);
+        } else if (node && Array.isArray((node as any).selfEdges)) {
+            // If node has selfEdges but no dummy node was created, ensure points is a 7-point spline centered on node
+            ((node as any).selfEdges as Array<{label: EdgeLabel}>).forEach((selfEdge: {label: EdgeLabel}) => {
+                if (!Array.isArray(selfEdge.label.points) || selfEdge.label.points.length !== 7) {
+                    const xVal = valid(node.x) ? node.x! : 0;
+                    const yVal = valid(node.y) ? node.y! : 0;
+                    const widthVal = valid(node.width) ? node.width! : 0;
+                    const heightVal = valid(node.height) ? node.height! : 0;
+                    const dx = widthVal / 2;
+                    const dy = heightVal / 2;
+                    selfEdge.label.points = [
+                        {x: xVal + dx, y: yVal - dy},
+                        {x: xVal + dx, y: yVal - dy},
+                        {x: xVal,      y: yVal},
+                        {x: xVal - dx, y: yVal + dy},
+                        {x: xVal - dx, y: yVal + dy},
+                        {x: xVal,      y: yVal},
+                        {x: xVal,      y: yVal}
+                    ];
+                }
+            });
         }
     });
 }

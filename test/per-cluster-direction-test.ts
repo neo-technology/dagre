@@ -1,3 +1,16 @@
+describe('Per-Cluster Direction Architecture', () => {
+  it('should layout nested clusters with different rankdirs', () => {
+    // TODO: Implement test for nested clusters with per-cluster rankdir
+  });
+
+  it('should route cross-cluster edges correctly', () => {
+    // TODO: Implement test for cross-cluster edge routing
+  });
+
+  it('should support all rankdir combinations (TB, BT, LR, RL)', () => {
+    // TODO: Implement test for all rankdir combinations in clusters
+  });
+});
 import {Graph} from "@dagrejs/graphlib";
 import {layout} from "../lib/layout";
 

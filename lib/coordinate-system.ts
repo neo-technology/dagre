@@ -1,3 +1,30 @@
+/**
+ * Transforms a point from subgraph-local coordinates to parent context coordinates.
+ * @param x X in subgraph
+ * @param y Y in subgraph
+ * @param clusterX X of cluster node in parent
+ * @param clusterY Y of cluster node in parent
+ * @param subgraphCenterX Center X of subgraph in subgraph coords
+ * @param subgraphCenterY Center Y of subgraph in subgraph coords
+ * @returns [x, y] in parent context
+ */
+export function toParentCoords(x: number, y: number, clusterX: number, clusterY: number, subgraphCenterX: number, subgraphCenterY: number): [number, number] {
+    return [clusterX + (x - subgraphCenterX), clusterY + (y - subgraphCenterY)];
+}
+
+/**
+ * Transforms a point from parent context coordinates to subgraph-local coordinates.
+ * @param x X in parent
+ * @param y Y in parent
+ * @param clusterX X of cluster node in parent
+ * @param clusterY Y of cluster node in parent
+ * @param subgraphCenterX Center X of subgraph in subgraph coords
+ * @param subgraphCenterY Center Y of subgraph in subgraph coords
+ * @returns [x, y] in subgraph-local coords
+ */
+export function toSubgraphCoords(x: number, y: number, clusterX: number, clusterY: number, subgraphCenterX: number, subgraphCenterY: number): [number, number] {
+    return [subgraphCenterX + (x - clusterX), subgraphCenterY + (y - clusterY)];
+}
 import type {EdgeLabel, Graph, GraphLabel, NodeLabel, Point} from './types';
 
 export function adjust(graph: Graph): void {
