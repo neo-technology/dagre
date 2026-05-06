@@ -290,6 +290,8 @@
         .cluster-tb rect { stroke: #27ae60; fill: #eafaf1; }
         .cluster-bt rect { stroke: #e67e22; fill: #fef9e7; }
         .cluster-rl rect { stroke: #e74c3c; fill: #fdedec; }
+        .cluster-collapsed rect { opacity: 0.7; stroke-dasharray: none; }
+        .cluster-collapsed text { font-style: italic; }
 
         path.edge {
             fill: none;
@@ -352,7 +354,7 @@
         <div class="controls">
             <div class="control-group">
                 <label for="example-select">Example:</label>
-                <select id="example-select">
+                <select id="example-select" name="example-select">
                     <option value="simple">Simple Hierarchy</option>
                     <option value="horizontal">Horizontal Layout</option>
                     <option value="complex">Complex Network</option>
@@ -374,13 +376,13 @@
 
             <div class="control-group">
                 <span class="control-label">Node</span>
-                <input type="range" id="node-spacing" min="10" max="150" value="50" step="5">
+                <input type="range" id="node-spacing" name="node-spacing" min="10" max="150" value="50" step="5">
                 <span class="slider-value"><span id="node-spacing-value">50</span>px</span>
             </div>
 
             <div class="control-group">
                 <span class="control-label">Rank</span>
-                <input type="range" id="rank-spacing" min="20" max="300" value="50" step="10">
+                <input type="range" id="rank-spacing" name="rank-spacing" min="20" max="300" value="50" step="10">
                 <span class="slider-value"><span id="rank-spacing-value">50</span>px</span>
             </div>
         </div>
@@ -436,6 +438,7 @@
 
         let currentExample = 'simple';
         let clusterDirections = {}; // { "exampleKey:nodeId": "LR" }
+        let collapsedClusters = {}; // { "exampleKey:nodeId": true }
 
         // Example definitions
         const examples = {
@@ -913,7 +916,8 @@ dagre.layout(g);`,
         }
 
         // Render graph function
-        function renderGraph(graph) {
+        function renderGraph(graph, clusterIds) {
+            clusterIds = clusterIds || new Set();
             // Run dagre layout
             dagre.layout(graph);
 
@@ -930,7 +934,8 @@ dagre.layout(g);`,
             edgesGroup.selectAll('*').remove();
 
             const isCompound = typeof graph.isCompound === 'function' && graph.isCompound();
-            const isCluster = v => isCompound && graph.children(v).length > 0;
+            // Include clusterIds so collapsed clusters (whose children were removed) still render as clusters
+            const isCluster = v => clusterIds.has(v) || (isCompound && graph.children(v).length > 0);
 
             // Render edges
             graph.edges().forEach(e => {
@@ -999,22 +1004,36 @@ dagre.layout(g);`,
                 const node = graph.node(v);
                 if (isCluster(v)) {
                     const rankdir = (node.rankdir || 'TB').toLowerCase();
+                    const isCollapsed = !!collapsedClusters[`${currentExample}:${v}`];
                     const clusterGroup = clustersGroup.append('g')
-                        .attr('class', `cluster cluster-${rankdir}`)
+                        .attr('class', `cluster cluster-${rankdir}${isCollapsed ? ' cluster-collapsed' : ''}`)
                         .attr('transform', `translate(${node.x}, ${node.y})`);
+
+                    const clusterId = v;
+                    const toggleCollapse = (event) => {
+                        if (event) event.stopPropagation();
+                        collapsedClusters[`${currentExample}:${clusterId}`] = !collapsedClusters[`${currentExample}:${clusterId}`];
+                        loadExample(currentExample);
+                    };
 
                     clusterGroup.append('rect')
                         .attr('x', -node.width / 2)
                         .attr('y', -node.height / 2)
                         .attr('width', node.width)
                         .attr('height', node.height)
-                        .attr('rx', 6);
+                        .attr('rx', 6)
+                        .style('cursor', 'pointer')
+                        .on('click', toggleCollapse);
 
                     clusterGroup.append('text')
                         .attr('y', -node.height / 2 + 14)
-                        .text(node.label || v);
+                        .style('cursor', 'pointer')
+                        .style('user-select', 'none')
+                        .text((isCollapsed ? '▶ ' : '▼ ') + (node.label || v))
+                        .on('click', toggleCollapse);
 
-                    // Direction dropdown
+                    // Direction dropdown (only when expanded — no children to direct when collapsed)
+                    if (!isCollapsed) {
                     const foW = 58, foH = 22;
                     const fo = clusterGroup.append('foreignObject')
                         .attr('x', node.width / 2 - foW - 6)
@@ -1040,11 +1059,12 @@ dagre.layout(g);`,
                             .text(dir);
                     });
 
-                    const clusterId = v;
-                    sel.on('change', function() {
+                    sel.on('change', function(event) {
+                        if (event) event.stopPropagation();
                         clusterDirections[`${currentExample}:${clusterId}`] = this.value;
                         loadExample(currentExample);
                     });
+                    } // end !isCollapsed
                 } else {
                     const nodeGroup = nodesGroup.append('g')
                         .attr('class', 'node')
@@ -1115,24 +1135,52 @@ dagre.layout(g);`,
         function loadExample(exampleKey) {
             currentExample = exampleKey;
             const example = examples[exampleKey];
-
             // Update title
             document.getElementById('graph-title').textContent = example.name;
 
             // Update code display
             document.getElementById('code-display').innerHTML = highlightCode(example.code);
 
-            // Build and render graph, applying any per-cluster direction overrides
+            // Build graph
             const graph = example.buildGraph();
+
+            // Record all cluster IDs BEFORE collapsing removes children
+            const clusterIds = new Set();
             if (typeof graph.isCompound === 'function' && graph.isCompound()) {
                 graph.nodes().forEach(v => {
-                    if (graph.children(v).length > 0) {
+                    if (graph.children(v) && graph.children(v).length > 0) clusterIds.add(v);
+                });
+            }
+
+            // Apply per-cluster direction overrides
+            if (typeof graph.isCompound === 'function' && graph.isCompound()) {
+                graph.nodes().forEach(v => {
+                    if (graph.children(v) && graph.children(v).length > 0) {
                         const override = clusterDirections[`${exampleKey}:${v}`];
                         if (override) graph.node(v).rankdir = override;
                     }
                 });
             }
-            renderGraph(graph);
+
+            // Collapse clusters: remove all descendants, set fixed small size
+            clusterIds.forEach(v => {
+                if (collapsedClusters[`${exampleKey}:${v}`]) {
+                    // BFS to collect all descendants
+                    const toRemove = [];
+                    const queue = [...(graph.children(v) || []).filter(c => c !== v)];
+                    while (queue.length) {
+                        const curr = queue.shift();
+                        if (!curr || !graph.hasNode(curr)) continue;
+                        toRemove.push(curr);
+                        (graph.children(curr) || []).filter(c => c !== curr).forEach(c => queue.push(c));
+                    }
+                    toRemove.forEach(d => { if (graph.hasNode(d)) graph.removeNode(d); });
+                    const node = graph.node(v);
+                    if (node) { node.width = 140; node.height = 32; }
+                }
+            });
+
+            renderGraph(graph, clusterIds);
         }
 
         // Event listener for example selector

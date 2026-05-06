@@ -44,13 +44,13 @@ export function layoutWithContext(
         const node = g.node(v);
         if (!node) return;
         // If the cluster node has its own rankdir/settings, create a child context
-        const childContext: LayoutContext = {
-            rankdir: typeof node.rankdir === 'string' ? node.rankdir : context.rankdir,
-            ranksep: typeof node.ranksep === 'number' ? node.ranksep : context.ranksep,
-            nodesep: typeof node.nodesep === 'number' ? node.nodesep : context.nodesep,
-            align: typeof node.align === 'string' ? node.align : context.align,
-            parent: context
-        };
+            const childContext: LayoutContext = {
+                rankdir: typeof node.rankdir === 'string' ? node.rankdir : context.rankdir,
+                ranksep: typeof node.ranksep === 'number' ? node.ranksep : context.ranksep,
+                nodesep: typeof node.nodesep === 'number' ? node.nodesep : context.nodesep,
+                align: typeof node.align === 'string' ? node.align : context.align,
+                parent: context
+            };
         // Extract subgraph for this cluster
         const subgraph = new (g.constructor as typeof Graph)({ multigraph: true, compound: true });
         const children = g.children(v);
@@ -230,54 +230,19 @@ interface EdgeProxyNodeLabel extends Omit<NodeLabel, 'e'> {
 
 
 export function layout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts: LayoutOptions = {}): Graph<GraphLabel, NodeLabel, EdgeLabel> {
-    // Phase 1: Construct root LayoutContext from graph label
-    const graphLabel = g.graph();
-    const context: LayoutContext = {
-        rankdir: (graphLabel.rankdir || "TB").toUpperCase(),
-        ranksep: graphLabel.ranksep,
-        nodesep: graphLabel.nodesep,
-        align: graphLabel.align
-    };
-    // Use new recursive layout pipeline
-    const result = layoutWithContext(g, context, opts);
-    // FINAL DEFENSIVE PASS: Ensure all self-loop edges have a valid 7-point numeric spline
-    result.edges().forEach(e => {
-        const edge = result.edge(e);
-        if (e.v === e.w) {
-            if (!Array.isArray(edge.points) || edge.points.length !== 7 || edge.points.some(pt => typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y))) {
-                const node = result.node(e.v);
-                const x = (typeof node?.x === 'number' && isFinite(node.x)) ? node.x : 0;
-                const y = (typeof node?.y === 'number' && isFinite(node.y)) ? node.y : 0;
-                const w = (typeof node?.width === 'number' && isFinite(node.width)) ? node.width : 0;
-                const h = (typeof node?.height === 'number' && isFinite(node.height)) ? node.height : 0;
-                const dx = w / 2;
-                const dy = h / 2;
-                edge.points = [
-                    {x: x + dx, y: y - dy},
-                    {x: x + dx, y: y - dy},
-                    {x: x,      y: y},
-                    {x: x - dx, y: y + dy},
-                    {x: x - dx, y: y + dy},
-                    {x: x,      y: y},
-                    {x: x,      y: y}
-                ];
-            }
-        } else if (!Array.isArray(edge.points)) {
-            edge.points = [];
-        }
-    });
-    // DEBUG ASSERTION (line ~XXX): Log and assert all self-loop edge points are valid before returning
-    result.edges().forEach(e => {
-        const edge = result.edge(e);
-        if (e.v === e.w) {
-            if (!Array.isArray(edge.points) || edge.points.length !== 7 || edge.points.some(pt => typeof pt.x !== 'number' || typeof pt.y !== 'number' || !isFinite(pt.x) || !isFinite(pt.y))) {
-                // eslint-disable-next-line no-console
-                console.error('DEBUG: Invalid self-loop points just before return:', e, edge.points);
-                throw new Error('Self-loop edge points invalid just before return from layout() at line ~XXX');
-            }
-        }
-    });
-    return result;
+    recursiveClusterLayout(g, util.notime, opts);
+    return g;
+}
+
+/** Returns the direct child of `cluster` that is an ancestor-or-equal of `node`, or undefined. */
+function topLevelChildOf(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, node: string, cluster: string): string | undefined {
+    let current: string | undefined = node;
+    while (current !== undefined) {
+        const parent = g.parent(current) as string | undefined;
+        if (parent === cluster) return current;
+        current = parent;
+    }
+    return undefined;
 }
 
 // Recursively layout clusters/subgraphs with their own rankdir
@@ -297,13 +262,8 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
             subgraph.setGraph({ rankdir: node.rankdir });
             // Copy nodes and edges belonging to this cluster
             const children = g.children(v);
-            const clusterRankdir = (node.rankdir || 'TB').toUpperCase();
             children.forEach(childId => {
                 const childNode = { ...g.node(childId) };
-                // For horizontal clusters, assign all children the same rank
-                if (clusterRankdir === 'LR' || clusterRankdir === 'RL') {
-                    childNode.rank = 0;
-                }
                 subgraph.setNode(childId, childNode);
                 // Set parent if needed (for nested clusters)
                 const parent = g.parent(childId);
@@ -311,16 +271,26 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
                     subgraph.setParent(childId, parent);
                 }
             });
-            // Copy edges where both ends are in the cluster
+            // Copy edges between the cluster's direct children, treating edges whose endpoints
+            // are inside a nested sub-cluster as proxy edges from that sub-cluster node.
+            const proxiedEdges = new Set<string>();
             g.edges().forEach(e => {
-                if (children.includes(e.v) && children.includes(e.w)) {
-                    subgraph.setEdge(e.v, e.w, { ...g.edge(e) });
+                const srcChild = topLevelChildOf(g, e.v, v);
+                const tgtChild = topLevelChildOf(g, e.w, v);
+                if (srcChild && tgtChild && srcChild !== tgtChild) {
+                    const key = `${srcChild}\x00${tgtChild}`;
+                    if (!proxiedEdges.has(key)) {
+                        proxiedEdges.add(key);
+                        subgraph.setEdge(srcChild, tgtChild, { ...g.edge(e) });
+                    }
                 }
             });
             // Recursively layout the subgraph (with its own rankdir)
             recursiveClusterLayout(subgraph, time, opts);
-            // Run the layout pipeline on the subgraph so it uses its own rankdir
-            runLayout(subgraph, time, opts);
+            // Run the layout pipeline on the subgraph via a proper layout graph
+            const subLayoutG = buildLayoutGraph(subgraph);
+            runLayout(subLayoutG, time, opts);
+            updateInputGraph(subgraph, subLayoutG);
             // Compute bounding box for the cluster
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             subgraph.nodes().forEach((u: string) => {
@@ -357,49 +327,116 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
         children: string[],
         removedNodes: Array<{id: string, node: NodeLabel, parent: string | undefined}>,
         removedEdges: Array<{edge: Edge, label: EdgeLabel}>,
-        rewiredEdges: Array<{original: Edge, rewired: Edge, label: EdgeLabel}>
     }> = [];
+
+    // --- Step 1: collect top-level clusters with ALL their descendants (BFS) ---
+    // Nested cluster nodes (themselves children of another cluster) are handled via
+    // the parent cluster's subgraph + the second pass below, not isolated here.
+    const getAllDescendants = (nodeId: string): string[] => {
+        const result: string[] = [];
+        const queue: string[] = ((g.children(nodeId) || []) as string[]).filter(c => c !== nodeId);
+        while (queue.length > 0) {
+            const curr = queue.shift()!;
+            result.push(curr);
+            ((g.children(curr) || []) as string[]).filter(c => c !== curr).forEach(c => queue.push(c));
+        }
+        return result;
+    };
+    const rawClusterMap = new Map<string, string[]>();
     clusterNodes.forEach(v => {
         const node = g.node(v);
         if (node && node.rankdir && clusterBounds[v]) {
-            const children = g.children(v).filter(childId => childId !== v);
-            // Remove and save the children
-            const removedNodes: Array<{id: string, node: NodeLabel, parent: string | undefined}> = [];
-            children.forEach(childId => {
-                const childNode = g.node(childId);
-                const parent = ((): string | undefined => {
-                  const p = g.parent(childId);
-                  return typeof p === 'string' ? p : undefined;
-                })();
-                removedNodes.push({id: childId, node: childNode, parent});
-                g.removeNode(childId);
-            });
-            // Remove and save all edges involving these children
-            const removedEdges: Array<{edge: Edge, label: EdgeLabel}> = [];
-            g.edges().forEach(e => {
-                if (children.includes(e.v) || children.includes(e.w)) {
-                    removedEdges.push({edge: e, label: g.edge(e)});
-                    g.removeEdge(e);
-                }
-            });
-            // Save subgraph and bounds for restoration
-            isolatedClusters.push({
-                clusterId: v,
-                subgraph: (node as any)._dagreClusterSubgraph,
-                bounds: clusterBounds[v],
-                children,
-                removedNodes,
-                removedEdges,
-                rewiredEdges: []
-            });
-            // Set the cluster node's width/height for parent layout
-            node.width = clusterBounds[v].width;
-            node.height = clusterBounds[v].height;
+            rawClusterMap.set(v, ((g.children(v) || []) as string[]).filter(c => c !== v));
+        }
+    });
+    // A cluster that is a direct child of another cluster is nested — skip it here
+    const allDirectChildrenFlat = new Set<string>([...rawClusterMap.values()].flat());
+    const clusterChildrenMap = new Map<string, string[]>();
+    rawClusterMap.forEach((_, v) => {
+        if (!allDirectChildrenFlat.has(v)) {
+            // Top-level cluster: include ALL descendants so orphaned grandchildren are removed too
+            clusterChildrenMap.set(v, getAllDescendants(v));
+        }
+    });
+    const allIsolatedChildren = new Set<string>(
+        [...clusterChildrenMap.values()].flat()
+    );
+    // Resolve a node to its top-level cluster representative (or itself if not a child)
+    const topLevelNode = (id: string): string => {
+        for (const [cId, ch] of clusterChildrenMap) {
+            if (ch.includes(id)) return cId;
+        }
+        return id;
+    };
+
+    // --- Step 2: save edges incident to any isolated child BEFORE removing any node ---
+    const allSavedEdges: Array<{edge: Edge, label: EdgeLabel}> = [];
+    g.edges().forEach(e => {
+        if (allIsolatedChildren.has(e.v) || allIsolatedChildren.has(e.w)) {
+            allSavedEdges.push({edge: e, label: g.edge(e)});
         }
     });
 
-    // Run the main layout for the top-level graph
-    runLayout(g, time, opts);
+    // --- Step 3: remove cluster children, record per-cluster metadata ---
+    // Pre-save parent info before any removals; g.removeNode() may re-parent children
+    const savedParents = new Map<string, string | undefined>();
+    allIsolatedChildren.forEach(id => {
+        const p = g.parent(id);
+        savedParents.set(id, typeof p === 'string' ? p : undefined);
+    });
+    clusterChildrenMap.forEach((children, v) => {
+        const node = g.node(v);
+        const removedNodes: Array<{id: string, node: NodeLabel, parent: string | undefined}> = [];
+        children.forEach(childId => {
+            const childNode = g.node(childId);
+            if (!childNode) return; // already removed (e.g. inner cluster's children after inner was removed)
+            removedNodes.push({id: childId, node: childNode, parent: savedParents.get(childId)});
+            g.removeNode(childId); // graphlib also removes incident edges here
+        });
+        const removedEdges = allSavedEdges.filter(({edge}) =>
+            children.includes(edge.v) || children.includes(edge.w)
+        );
+        const bounds = clusterBounds[v]!;
+        isolatedClusters.push({
+            clusterId: v,
+            subgraph: (node as any)._dagreClusterSubgraph,
+            bounds,
+            children,
+            removedNodes,
+            removedEdges,
+        });
+        // Set the cluster node's width/height for parent layout
+        node!.width = bounds.width;
+        node!.height = bounds.height;
+    });
+
+    // --- Step 4: add proxy edges between cluster nodes so the parent layout respects ordering ---
+    const proxyEdgeKeys = new Set<string>();
+    allSavedEdges.forEach(({edge, label}) => {
+        const effV = topLevelNode(edge.v);
+        const effW = topLevelNode(edge.w);
+        if (effV !== effW && g.hasNode(effV) && g.hasNode(effW)) {
+            const key = `${effV}\x00${effW}`;
+            if (!proxyEdgeKeys.has(key)) {
+                proxyEdgeKeys.add(key);
+                g.setEdge(effV, effW, {...label, width: 0, height: 0});
+            }
+        }
+    });
+
+    // --- Step 5: run the main layout for the top-level graph ---
+    const layoutG = buildLayoutGraph(g);
+    runLayout(layoutG, time, opts);
+    updateInputGraph(g, layoutG);
+
+    // --- Step 6: remove proxy edges, restore cluster internals, position children ---
+    // Remove proxy edges before restoring original edges
+    proxyEdgeKeys.forEach(key => {
+        const sep = key.indexOf('\x00');
+        const effV = key.slice(0, sep);
+        const effW = key.slice(sep + 1);
+        if (g.hasEdge(effV, effW)) g.removeEdge(effV, effW);
+    });
 
     // Restore all clusters' internal nodes and edges, and position them as a group
     isolatedClusters.forEach(({clusterId, subgraph, bounds, removedNodes, removedEdges}) => {
@@ -617,7 +654,7 @@ function makeSpaceForEdgeLabels(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): voi
     g.edges().forEach(e => {
         const edge = g.edge(e);
         edge.minlen! *= 2;
-        if (edge.labelpos!.toLowerCase() !== "c") {
+        if ((edge.labelpos ?? "r").toLowerCase() !== "c") {
             if (graph.rankdir === "TB" || graph.rankdir === "BT") {
                 edge.width! += edge.labeloffset!;
             } else {
@@ -726,6 +763,7 @@ function translateGraph(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
 
 function assignNodeIntersects(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
     g.edges().forEach(e => {
+        if (e.v === e.w) return; // self-loops already have their full spline from positionSelfEdges
         const edge = g.edge(e);
         const nodeV = g.node(e.v);
         const nodeW = g.node(e.w);

@@ -98,4 +98,37 @@ describe("per-cluster direction support", () => {
     expect(g.node("a1").y).toBeCloseTo(g.node("a2").y, 1);
     expect(g.node("a1").x).toBeGreaterThan(g.node("a2").x);
   });
+
+  it("lays out a BT cluster correctly inside a TB graph", () => {
+    // Main graph: TB. Cluster: BT (bottom-to-top).
+    // In a BT cluster, the SOURCE is at the BOTTOM and SINK at the TOP.
+    const g = new Graph({multigraph: true, compound: true})
+      .setGraph({rankdir: "TB"})
+      .setDefaultEdgeLabel(() => ({}));
+
+    g.setNode("start", {width: 40, height: 40});
+    g.setNode("c1", {label: "Cluster", rankdir: "BT"});
+    g.setNode("n1", {width: 40, height: 40}); // source → should end up at BOTTOM
+    g.setNode("n2", {width: 40, height: 40});
+    g.setNode("n3", {width: 40, height: 40}); // sink   → should end up at TOP
+    g.setParent("n1", "c1");
+    g.setParent("n2", "c1");
+    g.setParent("n3", "c1");
+    g.setNode("end", {width: 40, height: 40});
+    g.setEdge("start", "n1");
+    g.setEdge("n1", "n2");
+    g.setEdge("n2", "n3");
+    g.setEdge("n3", "end");
+
+    layout(g);
+
+    // BT: n3 (sink) should be above n1 (source) — smaller y means higher
+    expect(g.node("n3").y).toBeLessThan(g.node("n1").y);
+    // All three cluster nodes share the same x (vertical stack)
+    expect(g.node("n1").x).toBeCloseTo(g.node("n2").x, 1);
+    expect(g.node("n2").x).toBeCloseTo(g.node("n3").x, 1);
+    // The overall TB graph: start is above c1, c1 is above end
+    expect(g.node("start").y).toBeLessThan(g.node("c1").y);
+    expect(g.node("c1").y).toBeLessThan(g.node("end").y);
+  });
 });
