@@ -639,8 +639,8 @@ g.setDefaultEdgeLabel(() => ({}));
 g.setNode("start", { width: 80, height: 40, label: "Start" });
 g.setNode("end",   { width: 80, height: 40, label: "End" });
 
-// Cluster "build" flows Bottom-to-Top internally (BT = lint at bottom, bundle at top)
-g.setNode("build",   { rankdir: "BT", label: "Build Pipeline" });
+// Cluster "build" flows Left-to-Right internally
+g.setNode("build",   { rankdir: "LR", label: "Build Pipeline" });
 g.setNode("lint",    { width: 80, height: 40, label: "Lint" });
 g.setNode("compile", { width: 80, height: 40, label: "Compile" });
 g.setNode("bundle",  { width: 80, height: 40, label: "Bundle" });
@@ -650,7 +650,7 @@ g.setParent("bundle",  "build");
 g.setEdge("lint", "compile");
 g.setEdge("compile", "bundle");
 
-// Cluster "test" flows Left-to-Right internally
+// Cluster "test" also flows Left-to-Right internally
 g.setNode("test",        { rankdir: "LR", label: "Test Suite" });
 g.setNode("unit",        { width: 80,  height: 40, label: "Unit" });
 g.setNode("integration", { width: 100, height: 40, label: "Integration" });
@@ -677,7 +677,7 @@ dagre.layout(g);`,
                     g.setNode("start", { width: 80, height: 40, label: "Start" });
                     g.setNode("end",   { width: 80, height: 40, label: "End" });
 
-                    g.setNode("build",   { rankdir: "BT", label: "Build Pipeline" });
+                    g.setNode("build",   { rankdir: "LR", label: "Build Pipeline" });
                     g.setNode("lint",    { width: 80, height: 40, label: "Lint" });
                     g.setNode("compile", { width: 80, height: 40, label: "Compile" });
                     g.setNode("bundle",  { width: 80, height: 40, label: "Bundle" });
