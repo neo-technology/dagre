@@ -386,6 +386,7 @@
                 <span class="slider-value"><span id="rank-spacing-value">50</span>px</span>
             </div>
         </div>
+        <div id="cluster-controls" style="display:none; background:white; padding:10px 15px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin-bottom:20px; display:none; gap:16px; align-items:center; flex-wrap:wrap;"></div>
 
         <div class="demo-area">
             <div class="code-panel">
@@ -638,8 +639,8 @@ g.setDefaultEdgeLabel(() => ({}));
 g.setNode("start", { width: 80, height: 40, label: "Start" });
 g.setNode("end",   { width: 80, height: 40, label: "End" });
 
-// Cluster "build" flows Left-to-Right internally
-g.setNode("build",   { rankdir: "LR", label: "Build Pipeline" });
+// Cluster "build" flows Bottom-to-Top internally (BT = lint at bottom, bundle at top)
+g.setNode("build",   { rankdir: "BT", label: "Build Pipeline" });
 g.setNode("lint",    { width: 80, height: 40, label: "Lint" });
 g.setNode("compile", { width: 80, height: 40, label: "Compile" });
 g.setNode("bundle",  { width: 80, height: 40, label: "Bundle" });
@@ -649,7 +650,7 @@ g.setParent("bundle",  "build");
 g.setEdge("lint", "compile");
 g.setEdge("compile", "bundle");
 
-// Cluster "test" also flows Left-to-Right internally
+// Cluster "test" flows Left-to-Right internally
 g.setNode("test",        { rankdir: "LR", label: "Test Suite" });
 g.setNode("unit",        { width: 80,  height: 40, label: "Unit" });
 g.setNode("integration", { width: 100, height: 40, label: "Integration" });
@@ -676,7 +677,7 @@ dagre.layout(g);`,
                     g.setNode("start", { width: 80, height: 40, label: "Start" });
                     g.setNode("end",   { width: 80, height: 40, label: "End" });
 
-                    g.setNode("build",   { rankdir: "LR", label: "Build Pipeline" });
+                    g.setNode("build",   { rankdir: "BT", label: "Build Pipeline" });
                     g.setNode("lint",    { width: 80, height: 40, label: "Lint" });
                     g.setNode("compile", { width: 80, height: 40, label: "Compile" });
                     g.setNode("bundle",  { width: 80, height: 40, label: "Bundle" });
@@ -1042,46 +1043,14 @@ dagre.layout(g);`,
                         .style('cursor', 'pointer')
                         .on('click', toggleCollapse);
 
+                    // Label: collapse toggle + cluster name + direction tag
+                    const effectiveDir = (clusterDirections[`${currentExample}:${clusterId}`] || node.rankdir || 'TB').toUpperCase();
                     clusterGroup.append('text')
                         .attr('y', -node.height / 2 + 14)
                         .style('cursor', 'pointer')
                         .style('user-select', 'none')
-                        .text((isCollapsed ? '▶ ' : '▼ ') + (node.label || v))
+                        .text((isCollapsed ? '▶ ' : '▼ ') + (node.label || v) + ' [' + effectiveDir + ']')
                         .on('click', toggleCollapse);
-
-                    // Direction dropdown (only when expanded — no children to direct when collapsed)
-                    if (!isCollapsed) {
-                    const foW = 58, foH = 22;
-                    const fo = clusterGroup.append('foreignObject')
-                        .attr('x', node.width / 2 - foW - 6)
-                        .attr('y', -node.height / 2 + 3)
-                        .attr('width', foW)
-                        .attr('height', foH);
-
-                    const sel = fo.append('xhtml:select')
-                        .style('width', '100%')
-                        .style('height', '100%')
-                        .style('font-size', '11px')
-                        .style('padding', '1px 4px')
-                        .style('border', '1px solid #bdc3c7')
-                        .style('border-radius', '3px')
-                        .style('background', 'white')
-                        .style('cursor', 'pointer');
-
-                    const currentDir = (node.rankdir || 'TB').toUpperCase();
-                    ['TB', 'BT', 'LR', 'RL'].forEach(dir => {
-                        sel.append('xhtml:option')
-                            .attr('value', dir)
-                            .property('selected', dir === currentDir)
-                            .text(dir);
-                    });
-
-                    sel.on('change', function(event) {
-                        if (event) event.stopPropagation();
-                        clusterDirections[`${currentExample}:${clusterId}`] = this.value;
-                        loadExample(currentExample);
-                    });
-                    } // end !isCollapsed
                 } else {
                     const nodeGroup = nodesGroup.append('g')
                         .attr('class', 'node')
@@ -1177,6 +1146,42 @@ dagre.layout(g);`,
                         if (override) graph.node(v).rankdir = override;
                     }
                 });
+            }
+
+            // Build per-cluster direction controls in the main control bar
+            const clusterControlsDiv = document.getElementById('cluster-controls');
+            clusterControlsDiv.innerHTML = '';
+            if (clusterIds.size > 0) {
+                clusterControlsDiv.style.display = 'flex';
+                const hdr = document.createElement('span');
+                hdr.className = 'control-label';
+                hdr.textContent = 'Clusters:';
+                clusterControlsDiv.appendChild(hdr);
+                clusterIds.forEach(v => {
+                    const node = graph.node(v);
+                    const effectiveDir = (clusterDirections[`${exampleKey}:${v}`] || (node && node.rankdir) || 'TB').toUpperCase();
+                    const label = (node && node.label) || v;
+                    const group = document.createElement('div');
+                    group.className = 'control-group';
+                    group.style.cssText = 'display:flex;align-items:center;gap:4px;padding:4px 8px;';
+                    const lbl = document.createElement('span');
+                    lbl.className = 'control-label';
+                    lbl.textContent = label + ':';
+                    group.appendChild(lbl);
+                    ['TB','BT','LR','RL'].forEach(dir => {
+                        const btn = document.createElement('button');
+                        btn.className = 'direction-btn' + (dir === effectiveDir ? ' active' : '');
+                        btn.textContent = dir;
+                        btn.onclick = () => {
+                            clusterDirections[`${exampleKey}:${v}`] = dir;
+                            loadExample(exampleKey);
+                        };
+                        group.appendChild(btn);
+                    });
+                    clusterControlsDiv.appendChild(group);
+                });
+            } else {
+                clusterControlsDiv.style.display = 'none';
             }
 
             // Collapse clusters: remove all descendants, set fixed small size
