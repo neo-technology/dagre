@@ -949,11 +949,28 @@ dagre.layout(g);`,
                 let labelX, labelY;
 
                 if (isCompound) {
-                    // Node positions were updated by applyClusterDirections after dagre
-                    // computed edge routing, so edge.points are stale — recompute from
-                    // final node positions.
-                    const src = rectBorderPoint(sourceNode, targetNode);
-                    const tgt = rectBorderPoint(targetNode, sourceNode);
+                    // After dagre runs, children inside clusters are re-positioned
+                    // by recursiveClusterLayout, so edge.points are stale.
+                    // For cross-cluster edges, route to the cluster bounding box
+                    // so edges don't visually cut through unrelated clusters.
+                    const getTopCluster = (nodeId) => {
+                        let cur = nodeId;
+                        let topCluster = null;
+                        while (true) {
+                            const p = graph.parent(cur);
+                            if (!p) break;
+                            if (isCluster(p)) topCluster = p;
+                            cur = p;
+                        }
+                        return topCluster;
+                    };
+                    const srcCluster = getTopCluster(e.v);
+                    const tgtCluster = getTopCluster(e.w);
+                    // Use cluster box for cross-cluster endpoints; actual node for same-cluster or top-level
+                    const srcEff = (srcCluster && srcCluster !== tgtCluster) ? graph.node(srcCluster) : sourceNode;
+                    const tgtEff = (tgtCluster && tgtCluster !== srcCluster) ? graph.node(tgtCluster) : targetNode;
+                    const src = rectBorderPoint(srcEff, tgtEff);
+                    const tgt = rectBorderPoint(tgtEff, srcEff);
                     points = [src, tgt];
                     labelX = (src.x + tgt.x) / 2;
                     labelY = (src.y + tgt.y) / 2;
