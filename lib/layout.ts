@@ -1,24 +1,4 @@
 import { toParentCoords } from "./coordinate-system";
-/**
- * Per-Cluster Direction Architecture (feature/per-cluster-direction-architecture)
- *
- * This refactor introduces true per-cluster (per-subgraph) direction support in Dagre.
- *
- * Key concepts:
- * - Each cluster/subgraph can specify its own rankdir and layout settings.
- * - The layout pipeline is recursive: each cluster is laid out in isolation, then positioned as a unit in its parent.
- * - Edges crossing cluster boundaries are routed and transformed between coordinate systems.
- * - Node positions are recursively transformed to global coordinates.
- * - Backward compatibility: if no clusters specify rankdir, layout is unchanged.
- *
- * Implementation steps:
- * 1. Introduce LayoutContext to encapsulate direction/settings for each cluster/subgraph.
- * 2. Refactor layout pipeline to be recursive, passing LayoutContext at each level.
- * 3. Isolate subgraph layout, transform node/edge positions into parent context.
- * 4. Implement edge routing and coordinate transformation for cross-cluster edges.
- * 5. Add/expand tests for all per-cluster direction scenarios.
- * 6. Update documentation.
- */
 
 // LayoutContext: encapsulates direction and settings for a cluster/subgraph
 interface LayoutContext {
@@ -27,10 +7,8 @@ interface LayoutContext {
     nodesep?: number;
     align?: string;
     parent?: LayoutContext;
-    // Add more settings as needed
 }
 
-// Entry point for recursive per-cluster layout (to be implemented)
 export function layoutWithContext(
     g: Graph<GraphLabel, NodeLabel, EdgeLabel>,
     context: LayoutContext,
@@ -165,38 +143,7 @@ export function layoutWithContext(
 
     return g;
 }
-/**
- * ARCHITECTURAL PLAN: Per-Cluster Direction Support (feature/per-cluster-direction-architecture)
- *
- * This refactor introduces true per-cluster (per-subgraph) direction support in Dagre.
- *
- * Key concepts:
- * - Each cluster/subgraph can specify its own rankdir and layout settings.
- * - The layout pipeline is recursive: each cluster is laid out in isolation, then positioned as a unit in its parent.
- * - Edges crossing cluster boundaries are routed and transformed between coordinate systems.
- * - Node positions are recursively transformed to global coordinates.
- * - Backward compatibility: if no clusters specify rankdir, layout is unchanged.
- *
- * Implementation steps:
- * 1. Introduce LayoutContext to encapsulate direction/settings for each cluster/subgraph.
- * 2. Refactor layout pipeline to be recursive, passing LayoutContext at each level.
- * 3. Isolate subgraph layout, transform node/edge positions into parent context.
- * 4. Implement edge routing and coordinate transformation for cross-cluster edges.
- * 5. Add/expand tests for all per-cluster direction scenarios.
- * 6. Update documentation.
- */
 
-// LayoutContext: encapsulates direction and settings for a cluster/subgraph
-interface LayoutContext {
-    rankdir: string;
-    ranksep?: number;
-    nodesep?: number;
-    align?: string;
-    parent?: LayoutContext;
-    // Add more settings as needed
-}
-
-// Entry point for recursive per-cluster layout (to be implemented)
 import * as acyclic from "./acyclic";
 import * as normalize from "./normalize";
 import rank from "./rank";
