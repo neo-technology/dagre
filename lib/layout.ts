@@ -220,6 +220,11 @@ interface ExtendedNodeLabel extends NodeLabel {
     selfEdges?: SelfEdge[];
 }
 
+/** Internal-only: cluster node label augmented with a transient subgraph reference used during layout. */
+interface ClusterNodeLabel extends NodeLabel {
+    _dagreClusterSubgraph?: Graph<GraphLabel, NodeLabel, EdgeLabel>;
+}
+
 interface SelfEdgeNodeLabel extends Omit<NodeLabel, 'e' | 'label'> {
     e: Edge;
 }
@@ -315,7 +320,7 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
                 offsetX: minX, offsetY: minY
             };
             // Save the internal layout for later
-            (node as any)._dagreClusterSubgraph = subgraph;
+            (node as ClusterNodeLabel)._dagreClusterSubgraph = subgraph;
         }
     });
 
@@ -397,17 +402,18 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
             children.includes(edge.v) || children.includes(edge.w)
         );
         const bounds = clusterBounds[v]!;
+        if (!node) return;
         isolatedClusters.push({
             clusterId: v,
-            subgraph: (node as any)._dagreClusterSubgraph,
+            subgraph: (node as ClusterNodeLabel)._dagreClusterSubgraph!,
             bounds,
             children,
             removedNodes,
             removedEdges,
         });
         // Set the cluster node's width/height for parent layout
-        node!.width = bounds.width;
-        node!.height = bounds.height;
+        node.width = bounds.width;
+        node.height = bounds.height;
     });
 
     // --- Step 4: add proxy edges between cluster nodes so the parent layout respects ordering ---
@@ -469,15 +475,15 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
                 mainNode.y = clusterY + (subNode.y - subgraphCenterY);
             }
         });
-        delete (clusterNode as any)._dagreClusterSubgraph;
+        delete (clusterNode as ClusterNodeLabel)._dagreClusterSubgraph;
     });
 
     // After parent layout, forcibly swap x/y for cluster children if needed
     clusterNodes.forEach(v => {
         const node = g.node(v);
         const bounds = clusterBounds[v];
-        if (node && node.rankdir && (node as any)._dagreClusterSubgraph && bounds) {
-            const subgraph = (node as any)._dagreClusterSubgraph as Graph<GraphLabel, NodeLabel, EdgeLabel>;
+        if (node && node.rankdir && (node as ClusterNodeLabel)._dagreClusterSubgraph && bounds) {
+            const subgraph = (node as ClusterNodeLabel)._dagreClusterSubgraph as Graph<GraphLabel, NodeLabel, EdgeLabel>;
             // Find where the parent layout placed the cluster node
             const parentX = node.x ?? 0;
             const parentY = node.y ?? 0;
@@ -500,7 +506,7 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
                 }
             });
             // Optionally, clean up
-            delete (node as any)._dagreClusterSubgraph;
+            delete (node as ClusterNodeLabel)._dagreClusterSubgraph;
         }
     });
 }
@@ -879,7 +885,7 @@ function insertSelfEdges(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
 function positionSelfEdges(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
     g.nodes().forEach(v => {
         const node = g.node(v);
-        const valid = (val: any) => typeof val === 'number' && isFinite(val);
+        const valid = (val: unknown) => typeof val === 'number' && isFinite(val);
         if (node.dummy === "selfedge") {
             const selfEdgeNode = node as unknown as SelfEdgeNodeLabel & { edgeLabel: EdgeLabel };
             const selfNode = g.node(selfEdgeNode.e.v);
@@ -904,9 +910,9 @@ function positionSelfEdges(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
             selfEdgeNode.edgeLabel.y = nodeY;
             g.setEdge(selfEdgeNode.e, selfEdgeNode.edgeLabel);
             g.removeNode(v);
-        } else if (node && Array.isArray((node as any).selfEdges)) {
+        } else if (node && Array.isArray((node as ExtendedNodeLabel).selfEdges)) {
             // If node has selfEdges but no dummy node was created, ensure points is a 7-point spline centered on node
-            ((node as any).selfEdges as Array<{label: EdgeLabel}>).forEach((selfEdge: {label: EdgeLabel}) => {
+            ((node as ExtendedNodeLabel).selfEdges as Array<{label: EdgeLabel}>).forEach((selfEdge: {label: EdgeLabel}) => {
                 if (!Array.isArray(selfEdge.label.points) || selfEdge.label.points.length !== 7) {
                     const xVal = valid(node.x) ? node.x! : 0;
                     const yVal = valid(node.y) ? node.y! : 0;
