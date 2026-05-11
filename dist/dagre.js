@@ -773,65 +773,6 @@ var dagre = (() => {
   // lib/version.ts
   var version = "3.0.1-pre";
 
-  // lib/coordinate-system.ts
-  function adjust(graph) {
-    var _a;
-    const rankDir = (_a = graph.graph().rankdir) == null ? void 0 : _a.toLowerCase();
-    if (rankDir === "lr" || rankDir === "rl") {
-      swapWidthHeight(graph);
-    }
-  }
-  function undo(graph) {
-    var _a;
-    const rankDir = (_a = graph.graph().rankdir) == null ? void 0 : _a.toLowerCase();
-    if (rankDir === "bt" || rankDir === "rl") {
-      reverseY(graph);
-    }
-    if (rankDir === "lr" || rankDir === "rl") {
-      swapXY(graph);
-      swapWidthHeight(graph);
-    }
-  }
-  function swapWidthHeight(graph) {
-    graph.nodes().forEach((node) => swapWidthHeightOne(graph.node(node)));
-    graph.edges().forEach((edge) => swapWidthHeightOne(graph.edge(edge)));
-  }
-  function swapWidthHeightOne(attrs) {
-    const w2 = attrs.width;
-    attrs.width = attrs.height;
-    attrs.height = w2;
-  }
-  function reverseY(graph) {
-    graph.nodes().forEach((node) => reverseYOne(graph.node(node)));
-    graph.edges().forEach((edge) => {
-      var _a;
-      const edgeLabel = graph.edge(edge);
-      (_a = edgeLabel.points) == null ? void 0 : _a.forEach(reverseYOne);
-      if (Object.hasOwn(edgeLabel, "y")) {
-        reverseYOne(edgeLabel);
-      }
-    });
-  }
-  function reverseYOne(attrs) {
-    attrs.y = -attrs.y;
-  }
-  function swapXY(graph) {
-    graph.nodes().forEach((node) => swapXYOne(graph.node(node)));
-    graph.edges().forEach((edge) => {
-      var _a;
-      const edgeLabel = graph.edge(edge);
-      (_a = edgeLabel.points) == null ? void 0 : _a.forEach(swapXYOne);
-      if (Object.hasOwn(edgeLabel, "x")) {
-        swapXYOne(edgeLabel);
-      }
-    });
-  }
-  function swapXYOne(attrs) {
-    const x2 = attrs.x;
-    attrs.x = attrs.y;
-    attrs.y = x2;
-  }
-
   // lib/data/list.ts
   var List = class {
     constructor() {
@@ -1021,7 +962,7 @@ var dagre = (() => {
     graph.nodes().forEach(dfs2);
     return fas;
   }
-  function undo2(graph) {
+  function undo(graph) {
     graph.edges().forEach((e) => {
       const label = graph.edge(e);
       if (label.reversed) {
@@ -1076,7 +1017,7 @@ var dagre = (() => {
     }
     graph.setEdge(v2, w2, { weight: edgeLabel.weight }, name);
   }
-  function undo3(graph) {
+  function undo2(graph) {
     graph.graph().dummyChains.forEach((v2) => {
       let node = graph.node(v2);
       const origLabel = node.edgeLabel;
@@ -1556,6 +1497,65 @@ var dagre = (() => {
     if (prev) {
       graph.setEdge(prev, curr, { weight: 1 });
     }
+  }
+
+  // lib/coordinate-system.ts
+  function adjust(graph) {
+    var _a;
+    const rankDir = (_a = graph.graph().rankdir) == null ? void 0 : _a.toLowerCase();
+    if (rankDir === "lr" || rankDir === "rl") {
+      swapWidthHeight(graph);
+    }
+  }
+  function undo3(graph) {
+    var _a;
+    const rankDir = (_a = graph.graph().rankdir) == null ? void 0 : _a.toLowerCase();
+    if (rankDir === "bt" || rankDir === "rl") {
+      reverseY(graph);
+    }
+    if (rankDir === "lr" || rankDir === "rl") {
+      swapXY(graph);
+      swapWidthHeight(graph);
+    }
+  }
+  function swapWidthHeight(graph) {
+    graph.nodes().forEach((node) => swapWidthHeightOne(graph.node(node)));
+    graph.edges().forEach((edge) => swapWidthHeightOne(graph.edge(edge)));
+  }
+  function swapWidthHeightOne(attrs) {
+    const w2 = attrs.width;
+    attrs.width = attrs.height;
+    attrs.height = w2;
+  }
+  function reverseY(graph) {
+    graph.nodes().forEach((node) => reverseYOne(graph.node(node)));
+    graph.edges().forEach((edge) => {
+      var _a;
+      const edgeLabel = graph.edge(edge);
+      (_a = edgeLabel.points) == null ? void 0 : _a.forEach(reverseYOne);
+      if (Object.hasOwn(edgeLabel, "y")) {
+        reverseYOne(edgeLabel);
+      }
+    });
+  }
+  function reverseYOne(attrs) {
+    attrs.y = -attrs.y;
+  }
+  function swapXY(graph) {
+    graph.nodes().forEach((node) => swapXYOne(graph.node(node)));
+    graph.edges().forEach((edge) => {
+      var _a;
+      const edgeLabel = graph.edge(edge);
+      (_a = edgeLabel.points) == null ? void 0 : _a.forEach(swapXYOne);
+      if (Object.hasOwn(edgeLabel, "x")) {
+        swapXYOne(edgeLabel);
+      }
+    });
+  }
+  function swapXYOne(attrs) {
+    const x2 = attrs.x;
+    attrs.x = attrs.y;
+    attrs.y = x2;
   }
 
   // lib/order/init-order.ts
@@ -2507,6 +2507,7 @@ var dagre = (() => {
         ({ edge }) => children.includes(edge.v) || children.includes(edge.w)
       );
       const bounds = clusterBounds[v2];
+      if (!node) return;
       isolatedClusters.push({
         clusterId: v2,
         subgraph: node._dagreClusterSubgraph,
@@ -2574,17 +2575,13 @@ var dagre = (() => {
         const parentY = (_b = node.y) != null ? _b : 0;
         const subgraphCenterX = (bounds.minX + bounds.maxX) / 2;
         const subgraphCenterY = (bounds.minY + bounds.maxY) / 2;
-        const clusterRankdir = (node.rankdir || "TB").toUpperCase();
         subgraph.nodes().forEach((u) => {
           if (u === v2) return;
           const subNode = subgraph.node(u);
           const mainNode = g.node(u);
           if (mainNode && subNode && typeof subNode.x === "number" && typeof subNode.y === "number") {
-            let dx = subNode.x - subgraphCenterX;
-            let dy = subNode.y - subgraphCenterY;
-            if (clusterRankdir === "LR" || clusterRankdir === "RL") {
-              [dx, dy] = [dy, dx];
-            }
+            const dx = subNode.x - subgraphCenterX;
+            const dy = subNode.y - subgraphCenterY;
             mainNode.x = parentX + dx;
             mainNode.y = parentY + dy;
           }
@@ -2614,13 +2611,13 @@ var dagre = (() => {
     time2("    position", () => position(g));
     time2("    positionSelfEdges", () => positionSelfEdges(g));
     time2("    removeBorderNodes", () => removeBorderNodes(g));
-    time2("    normalize.undo", () => undo3(g));
+    time2("    normalize.undo", () => undo2(g));
     time2("    fixupEdgeLabelCoords", () => fixupEdgeLabelCoords(g));
-    time2("    undoCoordinateSystem", () => undo(g));
+    time2("    undoCoordinateSystem", () => undo3(g));
     time2("    translateGraph", () => translateGraph(g));
     time2("    assignNodeIntersects", () => assignNodeIntersects(g));
     time2("    reversePoints", () => reversePointsForReversedEdges(g));
-    time2("    acyclic.undo", () => undo2(g));
+    time2("    acyclic.undo", () => undo(g));
   }
   function updateInputGraph(inputGraph, layoutGraph) {
     inputGraph.nodes().forEach((v2) => {
