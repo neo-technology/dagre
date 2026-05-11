@@ -484,7 +484,6 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
             // Compute the center of the subgraph's bounding box
             const subgraphCenterX = (bounds.minX + bounds.maxX) / 2;
             const subgraphCenterY = (bounds.minY + bounds.maxY) / 2;
-            const clusterRankdir = (node.rankdir || 'TB').toUpperCase();
             // Offset all child nodes (except the cluster node itself)
             subgraph.nodes().forEach((u: string) => {
                 if (u === v) return;
@@ -494,12 +493,8 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
                     mainNode && subNode &&
                     typeof subNode.x === 'number' && typeof subNode.y === 'number'
                 ) {
-                    let dx = subNode.x - subgraphCenterX;
-                    let dy = subNode.y - subgraphCenterY;
-                    // If cluster is horizontal, swap x/y to simulate LR layout
-                    if (clusterRankdir === 'LR' || clusterRankdir === 'RL') {
-                        [dx, dy] = [dy, dx];
-                    }
+                    const dx = subNode.x - subgraphCenterX;
+                    const dy = subNode.y - subgraphCenterY;
                     mainNode.x = parentX + dx;
                     mainNode.y = parentY + dy;
                 }
