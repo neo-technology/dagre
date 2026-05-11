@@ -50,9 +50,9 @@ function run(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
         const node = graph.node(child);
         if (node && node.rankdir) {
             // Store rankdir on the subgraph root for later recursive layout
-            const graphLabel = graph.graph() as any;
-            if (!graphLabel.subgraphRankdirs) graphLabel.subgraphRankdirs = {};
-            graphLabel.subgraphRankdirs[child] = node.rankdir;
+            const graphLabel = graph.graph();
+            if (!(graphLabel as any).subgraphRankdirs) (graphLabel as any).subgraphRankdirs = {};
+            (graphLabel as any).subgraphRankdirs[child] = node.rankdir;
         }
         dfs(graph, root, nodeSep, weight, height, depths, child);
     });
