@@ -15,11 +15,8 @@ interface PathData {
 
 function parentDummyChains(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
     const postorderNums: { [key: string]: PostorderNum } = postorder(graph);
-    // Use LayoutContext and coordinate-system transforms for all dummy/border node placement
-    // This will ensure correct placement for per-cluster direction
-
-    const graphData = graph.graph && typeof graph.graph === 'function' ? graph.graph() : undefined;
-    if (!graphData || !Array.isArray(graphData.dummyChains)) return;
+    const graphData = graph.graph();
+    if (!Array.isArray(graphData.dummyChains)) return;
     const dummyChains = graphData.dummyChains;
     dummyChains.forEach(v => {
         let node: NodeLabel = graph.node(v);

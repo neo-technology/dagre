@@ -63,7 +63,7 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
         const node = g.node(v);
         if (node && node.rankdir) {
             // Build a new graph for the cluster's subgraph
-            const subgraph = new (g.constructor as typeof Graph)({ multigraph: true, compound: true });
+            const subgraph = new Graph({ multigraph: true, compound: true });
             // Set the subgraph's direction on the graph label
             subgraph.setGraph({ rankdir: node.rankdir });
             // Copy nodes and edges belonging to this cluster
