@@ -10,7 +10,7 @@ import * as coordinateSystem from "./coordinate-system";
 import order from "./order";
 import {position} from "./position";
 import {Graph} from "./graph-lib";
-import type {Edge, EdgeLabel, GraphLabel, LayoutOptions, NodeLabel, Point} from "./types";
+import type {Edge, EdgeLabel, GraphLabel, LayoutOptions, NodeCollection, NodeLabel, Point} from "./types";
 
 interface SelfEdge {
     e: Edge;
@@ -34,6 +34,8 @@ interface EdgeProxyNodeLabel extends Omit<NodeLabel, 'e'> {
     e: Edge;
 }
 
+let _oldGraph: Graph<GraphLabel, NodeLabel, EdgeLabel> | null = null;
+let _rawOldNodes: NodeCollection = null;
 
 export function layout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts: LayoutOptions = {}): Graph<GraphLabel, NodeLabel, EdgeLabel> {
     recursiveClusterLayout(g, util.notime, opts);
@@ -317,9 +319,13 @@ function runLayout(
     time: <T>(name: string, fn: () => T) => T,
     opts: LayoutOptions
 ): void {
+    if (opts?.useDynamic === false) {
+        _oldGraph = null;
+        _rawOldNodes = null;
+    }
     time("    makeSpaceForEdgeLabels", () => makeSpaceForEdgeLabels(g));
     time("    removeSelfEdges", () => removeSelfEdges(g));
-    time("    acyclic", () => acyclic.run(g));
+    time("    acyclic", () => acyclic.run(g, _oldGraph));
     time("    nestingGraph.run", () => nestingGraph.run(g));
     time("    rank", () => rank(util.asNonCompoundGraph(g)));
     time("    injectEdgeLabelProxies", () => injectEdgeLabelProxies(g));
@@ -331,11 +337,12 @@ function runLayout(
     time("    normalize.run", () => normalize.run(g));
     time("    parentDummyChains", () => parentDummyChains(g));
     time("    addBorderSegments", () => addBorderSegments(g));
-    time("    order", () => order(g, opts));
+    time("    order", () => order(g, opts, _rawOldNodes));
     time("    insertSelfEdges", () => insertSelfEdges(g));
     time("    adjustCoordinateSystem", () => coordinateSystem.adjust(g));
-    time("    position", () => position(g));
+    time("    position", () => position(g, opts.corePath));
     time("    positionSelfEdges", () => positionSelfEdges(g));
+    _rawOldNodes = JSON.parse(JSON.stringify(g._nodes));
     time("    removeBorderNodes", () => removeBorderNodes(g));
     time("    normalize.undo", () => normalize.undo(g));
     time("    fixupEdgeLabelCoords", () => fixupEdgeLabelCoords(g));
@@ -344,6 +351,7 @@ function runLayout(
     time("    assignNodeIntersects", () => assignNodeIntersects(g));
     time("    reversePoints", () => reversePointsForReversedEdges(g));
     time("    acyclic.undo", () => acyclic.undo(g));
+    _oldGraph = g;
 }
 
 /*
