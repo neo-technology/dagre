@@ -15,8 +15,10 @@ interface PathData {
 
 function parentDummyChains(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
     const postorderNums: { [key: string]: PostorderNum } = postorder(graph);
-
-    graph.graph().dummyChains!.forEach(v => {
+    const graphData = graph.graph();
+    if (!Array.isArray(graphData.dummyChains)) return;
+    const dummyChains = graphData.dummyChains;
+    dummyChains.forEach(v => {
         let node: NodeLabel = graph.node(v);
         const edgeObj: Edge = node.edgeObj!;
         const pathData: PathData = findPath(graph, postorderNums, edgeObj.v, edgeObj.w);

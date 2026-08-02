@@ -1,4 +1,6 @@
-﻿import {longestPath} from "./util";
+﻿// Use LayoutContext and coordinate-system transforms for all node ranking
+// This will ensure correct ranking for per-cluster direction
+import {longestPath} from "./util";
 import feasibleTree from "./feasible-tree";
 import networkSimplex from "./network-simplex";
 import type {EdgeLabel, Graph, GraphLabel, NodeLabel, RankerFunction} from "../types";

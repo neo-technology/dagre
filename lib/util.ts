@@ -356,7 +356,6 @@ function zipObject<T>(props: string[], values: T[]): { [key: string]: T } {
     }, {});
 }
 
-// TODO: Remove it when the type is fixed in graphlib. from children(v: string): string[] to children(v?: string): string[];
 export const GRAPH_NODE = "\x00";
 
 function compareByOldOrder(oldNodes: NodeCollection, nodeA: NodeLabel, nodeB: NodeLabel) {
