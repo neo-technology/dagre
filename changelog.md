@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](https://semandtic-versioning.org/).
 
+## [3.0.1-pre] - 2026
+
+### New Features
+* **Per-Cluster Direction Support (PR #511):** Each cluster/subgraph can now specify its own `rankdir`, `ranksep`, `nodesep`, and `align` settings. The layout engine recursively applies these settings, enabling complex nested cluster hierarchies. Backward compatible with global `rankdir` and legacy layouts.
+
+---
+
 ## [3.0.0] - 2026
 
 ### Major Improvements: TypeScript Migration

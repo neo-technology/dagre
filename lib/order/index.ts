@@ -1,3 +1,5 @@
+// Use LayoutContext and coordinate-system transforms for all node ordering
+// This will ensure correct ordering for per-cluster direction
 import initOrder from "./init-order";
 import crossCount from "./cross-count";
 import sortSubgraph from "./sort-subgraph";

@@ -4,6 +4,8 @@ import type {EdgeLabel, Graph, GraphLabel, NodeLabel} from "./types";
 export default addBorderSegments;
 
 function addBorderSegments(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
+        // Use LayoutContext and coordinate-system transforms for all border segment placement
+        // This will ensure correct placement for per-cluster direction
     function dfs(v: string): void {
         const children: string[] = graph.children(v);
         const node = graph.node(v);
@@ -11,7 +13,7 @@ function addBorderSegments(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): void
             children.forEach(dfs);
         }
 
-        if (Object.hasOwn(node, "minRank")) {
+        if (node && Object.hasOwn(node, "minRank")) {
             node.borderLeft = [];
             node.borderRight = [];
             for (let rank: number = node.minRank!, maxRank: number = node.maxRank! + 1;

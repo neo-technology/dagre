@@ -31,6 +31,22 @@ export interface NodeLabel {
     shape?: string;
     edgeLabel?: EdgeLabel;
     edgeObj?: Edge;
+    /**
+     * Optional direction for clusters/subgraphs. If set, overrides the global graph direction for this cluster.
+     */
+    rankdir?: 'TB' | 'BT' | 'LR' | 'RL';
+    /**
+     * Optional rank separation override for this cluster/subgraph.
+     */
+    ranksep?: number;
+    /**
+     * Optional node separation override for this cluster/subgraph.
+     */
+    nodesep?: number;
+    /**
+     * Optional alignment override for this cluster/subgraph.
+     */
+    align?: 'UL' | 'UR' | 'DL' | 'DR';
     [key: string]: unknown;
 }
 export interface EdgeLabel {

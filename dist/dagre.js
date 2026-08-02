@@ -771,7 +771,7 @@ var dagre = (() => {
   var GRAPH_NODE = "\0";
 
   // lib/version.ts
-  var version = "3.0.0";
+  var version = "3.0.1-pre";
 
   // lib/data/list.ts
   var List = class {
@@ -1316,7 +1316,10 @@ var dagre = (() => {
   var parent_dummy_chains_default = parentDummyChains;
   function parentDummyChains(graph) {
     const postorderNums = postorder2(graph);
-    graph.graph().dummyChains.forEach((v2) => {
+    const graphData = graph.graph && typeof graph.graph === "function" ? graph.graph() : void 0;
+    if (!graphData || !Array.isArray(graphData.dummyChains)) return;
+    const dummyChains = graphData.dummyChains;
+    dummyChains.forEach((v2) => {
       let node = graph.node(v2);
       const edgeObj = node.edgeObj;
       const pathData = findPath(graph, postorderNums, edgeObj.v, edgeObj.w);
@@ -1388,7 +1391,15 @@ var dagre = (() => {
     graph.graph().nestingRoot = root;
     graph.edges().forEach((e) => graph.edge(e).minlen *= nodeSep);
     const weight = sumWeights(graph) + 1;
-    graph.children(GRAPH_NODE).forEach((child) => dfs(graph, root, nodeSep, weight, height, depths, child));
+    graph.children(GRAPH_NODE).forEach((child) => {
+      const node = graph.node(child);
+      if (node && node.rankdir) {
+        const graphLabel = graph.graph();
+        if (!graphLabel.subgraphRankdirs) graphLabel.subgraphRankdirs = {};
+        graphLabel.subgraphRankdirs[child] = node.rankdir;
+      }
+      dfs(graph, root, nodeSep, weight, height, depths, child);
+    });
     graph.graph().nodeRankFactor = nodeSep;
   }
   function dfs(graph, root, nodeSep, weight, height, depths, v2) {
@@ -1466,7 +1477,7 @@ var dagre = (() => {
       if (children.length) {
         children.forEach(dfs2);
       }
-      if (Object.hasOwn(node, "minRank")) {
+      if (node && Object.hasOwn(node, "minRank")) {
         node.borderLeft = [];
         node.borderRight = [];
         for (let rank2 = node.minRank, maxRank2 = node.maxRank + 1; rank2 < maxRank2; ++rank2) {
@@ -2363,12 +2374,220 @@ var dagre = (() => {
 
   // lib/layout.ts
   function layout(g, opts = {}) {
-    const time2 = opts.debugTiming ? time : notime;
-    return time2("layout", () => {
-      const layoutGraph = time2("  buildLayoutGraph", () => buildLayoutGraph(g));
-      time2("  runLayout", () => runLayout(layoutGraph, time2, opts));
-      time2("  updateInputGraph", () => updateInputGraph(g, layoutGraph));
-      return layoutGraph;
+    recursiveClusterLayout(g, notime, opts);
+    return g;
+  }
+  function topLevelChildOf(g, node, cluster) {
+    let current = node;
+    while (current !== void 0) {
+      const parent = g.parent(current);
+      if (parent === cluster) return current;
+      current = parent;
+    }
+    return void 0;
+  }
+  function recursiveClusterLayout(g, time2, opts) {
+    const clusterNodes = g.nodes().filter((v2) => g.children(v2).length);
+    const clusterBounds = {};
+    clusterNodes.forEach((v2) => {
+      const node = g.node(v2);
+      if (node && node.rankdir) {
+        const subgraph = new g.constructor({ multigraph: true, compound: true });
+        subgraph.setGraph({ rankdir: node.rankdir });
+        const children = g.children(v2);
+        children.forEach((childId) => {
+          const childNode = { ...g.node(childId) };
+          subgraph.setNode(childId, childNode);
+          const parent = g.parent(childId);
+          if (parent && parent !== v2 && children.includes(parent)) {
+            subgraph.setParent(childId, parent);
+          }
+        });
+        const proxiedEdges = /* @__PURE__ */ new Set();
+        g.edges().forEach((e) => {
+          const srcChild = topLevelChildOf(g, e.v, v2);
+          const tgtChild = topLevelChildOf(g, e.w, v2);
+          if (srcChild && tgtChild && srcChild !== tgtChild) {
+            const key = `${srcChild}\0${tgtChild}`;
+            if (!proxiedEdges.has(key)) {
+              proxiedEdges.add(key);
+              subgraph.setEdge(srcChild, tgtChild, { ...g.edge(e) });
+            }
+          }
+        });
+        recursiveClusterLayout(subgraph, time2, opts);
+        const subLayoutG = buildLayoutGraph(subgraph);
+        runLayout(subLayoutG, time2, opts);
+        updateInputGraph(subgraph, subLayoutG);
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        subgraph.nodes().forEach((u) => {
+          if (u === v2) return;
+          const n = subgraph.node(u);
+          if (n && typeof n.x === "number" && typeof n.y === "number" && typeof n.width === "number" && typeof n.height === "number") {
+            minX = Math.min(minX, n.x - n.width / 2);
+            maxX = Math.max(maxX, n.x + n.width / 2);
+            minY = Math.min(minY, n.y - n.height / 2);
+            maxY = Math.max(maxY, n.y + n.height / 2);
+          }
+        });
+        if (!isFinite(minX) || !isFinite(minY) || !isFinite(maxX) || !isFinite(maxY)) {
+          minX = minY = 0;
+          maxX = maxY = 0;
+        }
+        const width2 = maxX - minX;
+        const height = maxY - minY;
+        clusterBounds[v2] = {
+          minX,
+          minY,
+          maxX,
+          maxY,
+          width: width2,
+          height,
+          offsetX: minX,
+          offsetY: minY
+        };
+        node._dagreClusterSubgraph = subgraph;
+      }
+    });
+    const isolatedClusters = [];
+    const getAllDescendants = (nodeId) => {
+      const result = [];
+      const queue = (g.children(nodeId) || []).filter((c) => c !== nodeId);
+      while (queue.length > 0) {
+        const curr = queue.shift();
+        result.push(curr);
+        (g.children(curr) || []).filter((c) => c !== curr).forEach((c) => queue.push(c));
+      }
+      return result;
+    };
+    const rawClusterMap = /* @__PURE__ */ new Map();
+    clusterNodes.forEach((v2) => {
+      const node = g.node(v2);
+      if (node && node.rankdir && clusterBounds[v2]) {
+        rawClusterMap.set(v2, (g.children(v2) || []).filter((c) => c !== v2));
+      }
+    });
+    const allDirectChildrenFlat = new Set([...rawClusterMap.values()].flat());
+    const clusterChildrenMap = /* @__PURE__ */ new Map();
+    rawClusterMap.forEach((_2, v2) => {
+      if (!allDirectChildrenFlat.has(v2)) {
+        clusterChildrenMap.set(v2, getAllDescendants(v2));
+      }
+    });
+    const allIsolatedChildren = new Set(
+      [...clusterChildrenMap.values()].flat()
+    );
+    const topLevelNode = (id) => {
+      for (const [cId, ch] of clusterChildrenMap) {
+        if (ch.includes(id)) return cId;
+      }
+      return id;
+    };
+    const allSavedEdges = [];
+    g.edges().forEach((e) => {
+      if (allIsolatedChildren.has(e.v) || allIsolatedChildren.has(e.w)) {
+        allSavedEdges.push({ edge: e, label: g.edge(e) });
+      }
+    });
+    const savedParents = /* @__PURE__ */ new Map();
+    allIsolatedChildren.forEach((id) => {
+      const p2 = g.parent(id);
+      savedParents.set(id, typeof p2 === "string" ? p2 : void 0);
+    });
+    clusterChildrenMap.forEach((children, v2) => {
+      const node = g.node(v2);
+      const removedNodes = [];
+      children.forEach((childId) => {
+        const childNode = g.node(childId);
+        if (!childNode) return;
+        removedNodes.push({ id: childId, node: childNode, parent: savedParents.get(childId) });
+        g.removeNode(childId);
+      });
+      const removedEdges = allSavedEdges.filter(
+        ({ edge }) => children.includes(edge.v) || children.includes(edge.w)
+      );
+      const bounds = clusterBounds[v2];
+      if (!node) return;
+      isolatedClusters.push({
+        clusterId: v2,
+        subgraph: node._dagreClusterSubgraph,
+        bounds,
+        children,
+        removedNodes,
+        removedEdges
+      });
+      node.width = bounds.width;
+      node.height = bounds.height;
+    });
+    const proxyEdgeKeys = /* @__PURE__ */ new Set();
+    allSavedEdges.forEach(({ edge, label }) => {
+      const effV = topLevelNode(edge.v);
+      const effW = topLevelNode(edge.w);
+      if (effV !== effW && g.hasNode(effV) && g.hasNode(effW)) {
+        const key = `${effV}\0${effW}`;
+        if (!proxyEdgeKeys.has(key)) {
+          proxyEdgeKeys.add(key);
+          g.setEdge(effV, effW, { ...label, width: 0, height: 0 });
+        }
+      }
+    });
+    const layoutG = buildLayoutGraph(g);
+    runLayout(layoutG, time2, opts);
+    updateInputGraph(g, layoutG);
+    proxyEdgeKeys.forEach((key) => {
+      const sep2 = key.indexOf("\0");
+      const effV = key.slice(0, sep2);
+      const effW = key.slice(sep2 + 1);
+      if (g.hasEdge(effV, effW)) g.removeEdge(effV, effW);
+    });
+    isolatedClusters.forEach(({ clusterId, subgraph, bounds, removedNodes, removedEdges }) => {
+      var _a, _b;
+      const clusterNode = g.node(clusterId);
+      const clusterX = (_a = clusterNode == null ? void 0 : clusterNode.x) != null ? _a : 0;
+      const clusterY = (_b = clusterNode == null ? void 0 : clusterNode.y) != null ? _b : 0;
+      const subgraphCenterX = (bounds.minX + bounds.maxX) / 2;
+      const subgraphCenterY = (bounds.minY + bounds.maxY) / 2;
+      removedNodes.forEach(({ id, node, parent }) => {
+        g.setNode(id, node);
+        if (parent !== void 0) g.setParent(id, parent);
+      });
+      removedEdges.forEach(({ edge, label }) => {
+        g.setEdge(edge, label);
+      });
+      subgraph.nodes().forEach((u) => {
+        if (u === clusterId) return;
+        const subNode = subgraph.node(u);
+        const mainNode = g.node(u);
+        if (mainNode && subNode && typeof subNode.x === "number" && typeof subNode.y === "number") {
+          mainNode.x = clusterX + (subNode.x - subgraphCenterX);
+          mainNode.y = clusterY + (subNode.y - subgraphCenterY);
+        }
+      });
+      delete clusterNode._dagreClusterSubgraph;
+    });
+    clusterNodes.forEach((v2) => {
+      var _a, _b;
+      const node = g.node(v2);
+      const bounds = clusterBounds[v2];
+      if (node && node.rankdir && node._dagreClusterSubgraph && bounds) {
+        const subgraph = node._dagreClusterSubgraph;
+        const parentX = (_a = node.x) != null ? _a : 0;
+        const parentY = (_b = node.y) != null ? _b : 0;
+        const subgraphCenterX = (bounds.minX + bounds.maxX) / 2;
+        const subgraphCenterY = (bounds.minY + bounds.maxY) / 2;
+        subgraph.nodes().forEach((u) => {
+          if (u === v2) return;
+          const subNode = subgraph.node(u);
+          const mainNode = g.node(u);
+          if (mainNode && subNode && typeof subNode.x === "number" && typeof subNode.y === "number") {
+            const dx = subNode.x - subgraphCenterX;
+            const dy = subNode.y - subgraphCenterY;
+            mainNode.x = parentX + dx;
+            mainNode.y = parentY + dy;
+          }
+        });
+        delete node._dagreClusterSubgraph;
+      }
     });
   }
   function runLayout(g, time2, opts) {
@@ -2480,9 +2699,10 @@ var dagre = (() => {
     const graph = g.graph();
     graph.ranksep /= 2;
     g.edges().forEach((e) => {
+      var _a;
       const edge = g.edge(e);
       edge.minlen *= 2;
-      if (edge.labelpos.toLowerCase() !== "c") {
+      if (((_a = edge.labelpos) != null ? _a : "r").toLowerCase() !== "c") {
         if (graph.rankdir === "TB" || graph.rankdir === "BT") {
           edge.width += edge.labeloffset;
         } else {
@@ -2574,6 +2794,7 @@ var dagre = (() => {
   }
   function assignNodeIntersects(g) {
     g.edges().forEach((e) => {
+      if (e.v === e.w) return;
       const edge = g.edge(e);
       const nodeV = g.node(e.v);
       const nodeW = g.node(e.w);
@@ -2654,6 +2875,7 @@ var dagre = (() => {
       let orderShift = 0;
       layer.forEach((v2, i) => {
         const node = g.node(v2);
+        if (typeof node.rank !== "number") node.rank = 0;
         node.order = i + orderShift;
         (node.selfEdges || []).forEach((selfEdge) => {
           addDummyNode(g, "selfedge", {
@@ -2662,8 +2884,19 @@ var dagre = (() => {
             rank: node.rank,
             order: i + ++orderShift,
             e: selfEdge.e,
-            label: selfEdge.label
+            edgeLabel: selfEdge.label
           }, "_se");
+          if (!Array.isArray(selfEdge.label.points) || selfEdge.label.points.length !== 7) {
+            selfEdge.label.points = [
+              { x: 0, y: -10 },
+              { x: 0, y: -10 },
+              { x: 0, y: 0 },
+              { x: 0, y: 10 },
+              { x: 0, y: 10 },
+              { x: 0, y: 0 },
+              { x: 0, y: 0 }
+            ];
+          }
         });
         delete node.selfEdges;
       });
@@ -2672,24 +2905,51 @@ var dagre = (() => {
   function positionSelfEdges(g) {
     g.nodes().forEach((v2) => {
       const node = g.node(v2);
+      const valid = (val) => typeof val === "number" && isFinite(val);
       if (node.dummy === "selfedge") {
         const selfEdgeNode = node;
         const selfNode = g.node(selfEdgeNode.e.v);
-        const x2 = selfNode.x + selfNode.width / 2;
-        const y2 = selfNode.y;
-        const dx = node.x - x2;
-        const dy = selfNode.height / 2;
-        g.setEdge(selfEdgeNode.e, selfEdgeNode.label);
-        g.removeNode(v2);
-        selfEdgeNode.label.points = [
-          { x: x2 + 2 * dx / 3, y: y2 - dy },
-          { x: x2 + 5 * dx / 6, y: y2 - dy },
-          { x: x2 + dx, y: y2 },
-          { x: x2 + 5 * dx / 6, y: y2 + dy },
-          { x: x2 + 2 * dx / 3, y: y2 + dy }
+        const xVal = valid(selfNode == null ? void 0 : selfNode.x) ? selfNode.x : 0;
+        const yVal = valid(selfNode == null ? void 0 : selfNode.y) ? selfNode.y : 0;
+        const widthVal = valid(selfNode == null ? void 0 : selfNode.width) ? selfNode.width : 0;
+        const heightVal = valid(selfNode == null ? void 0 : selfNode.height) ? selfNode.height : 0;
+        const nodeX = valid(node.x) ? node.x : xVal;
+        const nodeY = valid(node.y) ? node.y : yVal;
+        const dx = widthVal / 2;
+        const dy = heightVal / 2;
+        selfEdgeNode.edgeLabel.points = [
+          { x: nodeX + dx, y: nodeY - dy },
+          { x: nodeX + dx, y: nodeY - dy },
+          { x: nodeX, y: nodeY },
+          { x: nodeX - dx, y: nodeY + dy },
+          { x: nodeX - dx, y: nodeY + dy },
+          { x: nodeX, y: nodeY },
+          { x: nodeX, y: nodeY }
         ];
-        selfEdgeNode.label.x = node.x;
-        selfEdgeNode.label.y = node.y;
+        selfEdgeNode.edgeLabel.x = nodeX;
+        selfEdgeNode.edgeLabel.y = nodeY;
+        g.setEdge(selfEdgeNode.e, selfEdgeNode.edgeLabel);
+        g.removeNode(v2);
+      } else if (node && Array.isArray(node.selfEdges)) {
+        node.selfEdges.forEach((selfEdge) => {
+          if (!Array.isArray(selfEdge.label.points) || selfEdge.label.points.length !== 7) {
+            const xVal = valid(node.x) ? node.x : 0;
+            const yVal = valid(node.y) ? node.y : 0;
+            const widthVal = valid(node.width) ? node.width : 0;
+            const heightVal = valid(node.height) ? node.height : 0;
+            const dx = widthVal / 2;
+            const dy = heightVal / 2;
+            selfEdge.label.points = [
+              { x: xVal + dx, y: yVal - dy },
+              { x: xVal + dx, y: yVal - dy },
+              { x: xVal, y: yVal },
+              { x: xVal - dx, y: yVal + dy },
+              { x: xVal - dx, y: yVal + dy },
+              { x: xVal, y: yVal },
+              { x: xVal, y: yVal }
+            ];
+          }
+        });
       }
     });
   }
