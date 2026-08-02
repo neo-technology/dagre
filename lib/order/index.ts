@@ -7,13 +7,7 @@ import buildLayerGraph from "./build-layer-graph";
 import addSubgraphConstraints from "./add-subgraph-constraints";
 import {Graph} from "../graph-lib";
 import * as util from "../util";
-import type {Graph as GraphType, NodeCollection, OrderConstraint} from '../types';
-
-interface OrderOptions {
-    customOrder?: (graph: GraphType, order: (g: GraphType, opts: OrderOptions, oldNodes: NodeCollection) => void) => void;
-    disableOptimalOrderHeuristic?: boolean;
-    constraints?: OrderConstraint[];
-}
+import type {Graph as GraphType, NodeCollection, OrderConstraint, OrderOptions} from '../types';
 
 /*
  * Applies heuristics to minimize edge crossings in the graph and sets the best
@@ -30,7 +24,7 @@ interface OrderOptions {
  *    1. Graph nodes will have an "order" attribute based on the results of the
  *       algorithm.
  */
-export default function order(graph: GraphType, opts: OrderOptions = {}, oldNodes: NodeCollection): void {
+export default function order(graph: GraphType, opts: OrderOptions = {}, oldNodes: NodeCollection = null): void {
     if (typeof opts.customOrder === 'function') {
         opts.customOrder(graph, order);
         return;

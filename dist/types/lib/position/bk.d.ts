@@ -24,7 +24,7 @@ declare function findType1Conflicts(graph: Graph<GraphLabel, NodeLabel, EdgeLabe
 declare function findType2Conflicts(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, layering: string[][]): Conflicts;
 declare function addConflict(conflicts: Conflicts, v: string, w: string): void;
 declare function hasConflict(conflicts: Conflicts, v: string, w: string): boolean;
-declare function verticalAlignment(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, layering: string[][], conflicts: Conflicts, neighborFn: (v: string) => string[]): AlignmentResult;
+declare function verticalAlignment(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, layering: string[][], conflicts: Conflicts, neighborFn: (v: string) => string[], corePath?: string[]): AlignmentResult;
 declare function horizontalCompaction(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, layering: string[][], root: {
     [key: string]: string;
 }, align: {
@@ -33,5 +33,5 @@ declare function horizontalCompaction(graph: Graph<GraphLabel, NodeLabel, EdgeLa
 declare function findSmallestWidthAlignment(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, xss: XssMap): PositionMap;
 declare function alignCoordinates(xss: XssMap, alignTo: PositionMap): void;
 declare function balance(xss: XssMap, align?: string | undefined): PositionMap;
-declare function positionX(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): PositionMap;
+declare function positionX(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, corePath?: string[]): PositionMap;
 //# sourceMappingURL=bk.d.ts.map

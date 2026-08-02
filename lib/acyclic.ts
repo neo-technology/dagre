@@ -5,10 +5,10 @@ import type {Edge, EdgeLabel, GraphLabel, NodeLabel, WeightFunction} from "./typ
 
 export {run, undo};
 
-function run(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, oldGraph: Graph| null): void {
+function run(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, oldGraph?: Graph | null): void {
     const fas = (graph.graph().acyclicer === "greedy"
         ? greedyFAS(graph, weightFn(graph))
-        : dfsFAS(graph, oldGraph));
+        : dfsFAS(graph, oldGraph ?? null));
     fas.forEach(e => {
         const label = graph.edge(e)!;
         graph.removeEdge(e);

@@ -342,7 +342,7 @@ function runLayout(
     time("    adjustCoordinateSystem", () => coordinateSystem.adjust(g));
     time("    position", () => position(g, opts.corePath));
     time("    positionSelfEdges", () => positionSelfEdges(g));
-    _rawOldNodes = JSON.parse(JSON.stringify(g._nodes));
+    _rawOldNodes = JSON.parse(JSON.stringify((g as unknown as { _nodes: NodeCollection })._nodes));
     time("    removeBorderNodes", () => removeBorderNodes(g));
     time("    normalize.undo", () => normalize.undo(g));
     time("    fixupEdgeLabelCoords", () => fixupEdgeLabelCoords(g));

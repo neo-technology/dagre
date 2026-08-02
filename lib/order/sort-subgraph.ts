@@ -15,7 +15,23 @@ interface BarycenterEntry {
     weight?: number;
 }
 
-export default function sortSubgraph(graph: Graph, v: string, constraintGraph: Graph, oldNodes: NodeCollection, biasRight?: boolean): {result: SubgraphResult, usedBias: boolean} {
+export default function sortSubgraph(
+    graph: Graph,
+    v: string,
+    constraintGraph: Graph,
+    oldNodes?: NodeCollection | boolean,
+    biasRight?: boolean
+): SubgraphResult & { result: SubgraphResult, usedBias: boolean } {
+    let resolvedOldNodes: NodeCollection = null;
+    let resolvedBiasRight: boolean | undefined = biasRight;
+
+    if (typeof oldNodes === "boolean") {
+        resolvedBiasRight = oldNodes;
+        resolvedOldNodes = null;
+    } else if (oldNodes !== undefined) {
+        resolvedOldNodes = oldNodes;
+    }
+
     let movable = graph.children(v);
     const node = graph.node(v);
     const bl: string | undefined = node ? (node.borderLeft) : undefined;
@@ -29,7 +45,7 @@ export default function sortSubgraph(graph: Graph, v: string, constraintGraph: G
     const barycenters = barycenter(graph, movable);
     barycenters.forEach(entry => {
         if (graph.children(entry.v).length) {
-            const {result: subgraphResult} = sortSubgraph(graph, entry.v, constraintGraph, oldNodes, biasRight);
+            const {result: subgraphResult} = sortSubgraph(graph, entry.v, constraintGraph, resolvedOldNodes, resolvedBiasRight);
             subgraphs[entry.v] = subgraphResult;
             if (Object.hasOwn(subgraphResult, "barycenter")) {
                 mergeBarycenters(entry, subgraphResult);
@@ -74,7 +90,7 @@ export default function sortSubgraph(graph: Graph, v: string, constraintGraph: G
         }
     }
 
-    const result = sort(entries, reversedPairs, oldNodes, graph, biasRight);
+    const result = sort(entries, reversedPairs, resolvedOldNodes, graph, resolvedBiasRight);
 
     if (bl && br) {
         result.vs = [bl, result.vs, br].flat(1) as string[];
@@ -93,7 +109,9 @@ export default function sortSubgraph(graph: Graph, v: string, constraintGraph: G
         }
     }
 
-    return {result: result, usedBias: usedBias};
+    Object.defineProperty(result, "result", { value: result, enumerable: false, configurable: true, writable: true });
+    Object.defineProperty(result, "usedBias", { value: usedBias, enumerable: false, configurable: true, writable: true });
+    return result as SubgraphResult & { result: SubgraphResult, usedBias: boolean };
 }
 
 function expandSubgraphs(entries: { vs: string[] }[], subgraphs: { [key: string]: SubgraphResult }): void {

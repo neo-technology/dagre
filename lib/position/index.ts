@@ -5,7 +5,7 @@ import type {EdgeLabel, GraphLabel, NodeLabel} from "../types";
 
 export {position};
 
-function position(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, corePath: string[] | undefined): void {
+function position(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, corePath?: string[]): void {
     graph = util.asNonCompoundGraph(graph);
 
     positionY(graph);

@@ -104,13 +104,14 @@ export interface EdgeConfig {
     labelpos?: 'l' | 'c' | 'r';
     labeloffset?: number;
 }
-export interface LayoutConfig {
-    customOrder?: (graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, order: (graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts: LayoutOptions) => void) => void;
+export interface OrderOptions {
+    customOrder?: (graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, order: (graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts?: LayoutOptions, oldNodes?: NodeCollection) => void) => void;
     disableOptimalOrderHeuristic?: boolean;
-    constraints?: Array<{
-        left: string;
-        right: string;
-    }>;
+    constraints?: OrderConstraint[];
+}
+export interface LayoutConfig extends OrderOptions {
+    useDynamic?: boolean;
+    corePath?: string[];
 }
 export interface OrderConstraint {
     left: string;
@@ -137,4 +138,5 @@ export interface Edge {
     w: string;
     name?: string;
 }
+export type NodeCollection = Record<string, NodeLabel> | null;
 //# sourceMappingURL=types.d.ts.map

@@ -15,7 +15,27 @@ interface SortResult {
     weight?: number;
 }
 
-export default function sort(entries: SortEntry[], reversedPairs: Record<string, ResolvedEntry>, oldNodes: NodeCollection, graph: Graph, biasRight?: boolean): SortResult {
+export default function sort(
+    entries: SortEntry[],
+    reversedPairs?: Record<string, ResolvedEntry> | boolean,
+    oldNodes?: NodeCollection,
+    graph?: Graph | null,
+    biasRight?: boolean
+): SortResult {
+    let resolvedReversedPairs: Record<string, ResolvedEntry> = {};
+    let resolvedOldNodes: NodeCollection = null;
+    let resolvedGraph: Graph | null = null;
+    let resolvedBiasRight: boolean | undefined = biasRight;
+
+    if (typeof reversedPairs === "boolean") {
+        resolvedBiasRight = reversedPairs;
+        resolvedReversedPairs = {};
+    } else if (reversedPairs) {
+        resolvedReversedPairs = reversedPairs;
+        resolvedOldNodes = oldNodes ?? null;
+        resolvedGraph = graph ?? null;
+    }
+
     const parts = util.partition(entries, entry => {
         return Object.hasOwn(entry, "barycenter");
     });
@@ -26,10 +46,10 @@ export default function sort(entries: SortEntry[], reversedPairs: Record<string,
     let weight = 0;
     let vsIndex = 0;
 
-    sortable.sort(compareWithOldOrder(graph, oldNodes, !!biasRight));
+    sortable.sort(compareWithOldOrder(resolvedGraph, resolvedOldNodes, !!resolvedBiasRight));
 
     // re-inserts the links, that are already in sortable but reversed, next to its reverse counterpart
-    for (const [key, value] of Object.entries(reversedPairs)) {
+    for (const [key, value] of Object.entries(resolvedReversedPairs)) {
         const keyIndex = sortable.findIndex(entry => entry.vs[0] === key);
         sortable.splice(keyIndex + 1, 0, value);
     }
@@ -62,7 +82,7 @@ function consumeUnsortable(vs: string[][], unsortable: SortEntry[], index: numbe
     return index;
 }
 
-function compareWithOldOrder(graph: Graph, oldNodes: NodeCollection, bias: boolean): (entryV: SortEntry, entryW: SortEntry) => number {
+function compareWithOldOrder(graph: Graph | null, oldNodes: NodeCollection, bias: boolean): (entryV: SortEntry, entryW: SortEntry) => number {
     return (entryV: SortEntry, entryW: SortEntry) => {
         if (entryV.barycenter! < entryW.barycenter!) {
             return -1;
@@ -70,7 +90,7 @@ function compareWithOldOrder(graph: Graph, oldNodes: NodeCollection, bias: boole
             return 1;
         }
 
-        if (typeof entryV.vs[0] === "string" || typeof entryW.vs[0] === "string") {
+        if (graph && (typeof entryV.vs[0] === "string" || typeof entryW.vs[0] === "string")) {
             const nodeV = graph.node(entryV.vs[0]!);
             const nodeW = graph.node(entryW.vs[0]!);
             const byOldOrder = util.compareByOldOrder(oldNodes, nodeV, nodeW);

@@ -1,6 +1,6 @@
 import { Graph } from "./graph-lib";
-import type { EdgeLabel, GraphLabel, NodeLabel, PartitionResult, Point } from "./types";
-export { addBorderNode, addDummyNode, applyWithChunking, asNonCompoundGraph, buildLayerMatrix, intersectRect, mapValues, maxRank, normalizeRanks, notime, partition, pick, predecessorWeights, range, removeEmptyRanks, simplify, successorWeights, time, uniqueId, zipObject, };
+import type { EdgeLabel, GraphLabel, NodeCollection, NodeLabel, PartitionResult, Point } from "./types";
+export { addBorderNode, addDummyNode, applyWithChunking, asNonCompoundGraph, buildLayerMatrix, compareByOldOrder, intersectRect, mapValues, maxRank, normalizeRanks, notime, partition, pick, predecessorWeights, range, removeEmptyRanks, simplify, successorWeights, time, uniqueId, zipObject, };
 declare function addDummyNode(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, type: 'root' | "edge" | "border" | "edge-label" | "edge-proxy" | "selfedge", attrs: Partial<NodeLabel>, name: string): string;
 declare function simplify(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): Graph<GraphLabel, NodeLabel, EdgeLabel>;
 declare function asNonCompoundGraph(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): Graph<GraphLabel, NodeLabel, EdgeLabel>;
@@ -36,4 +36,5 @@ declare function zipObject<T>(props: string[], values: T[]): {
     [key: string]: T;
 };
 export declare const GRAPH_NODE = "\0";
+declare function compareByOldOrder(oldNodes: NodeCollection, nodeA: NodeLabel, nodeB: NodeLabel): number;
 //# sourceMappingURL=util.d.ts.map

@@ -4,8 +4,8 @@ import type {EdgeLabel, Graph, GraphLabel, NodeLabel} from "./types";
 export default addBorderSegments;
 
 function addBorderSegments(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
-        // Use LayoutContext and coordinate-system transforms for all border segment placement
-        // This will ensure correct placement for per-cluster direction
+    // Use LayoutContext and coordinate-system transforms for all border segment placement
+    // This will ensure correct placement for per-cluster direction
     function dfs(v: string): void {
         const children: string[] = graph.children(v);
         const node = graph.node(v);

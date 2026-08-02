@@ -12,7 +12,7 @@ import type {Graph, NodeCollection} from '../types';
  * Returns a layering matrix with an array per layer and each layer sorted by
  * the order of its nodes.
  */
-export default function initOrder(graph: Graph, oldNodes: NodeCollection): string[][] {
+export default function initOrder(graph: Graph, oldNodes: NodeCollection = null): string[][] {
     const visited: { [key: string]: boolean } = {};
     const simpleNodes = graph.nodes().filter(v => !graph.children(v).length);
     const simpleNodesRanks = simpleNodes.map(v => graph.node(v).rank);

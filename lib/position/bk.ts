@@ -190,7 +190,7 @@ function verticalAlignment(
     layering: string[][],
     conflicts: Conflicts,
     neighborFn: (v: string) => string[],
-    corePath: string[] | undefined,
+    corePath?: string[],
 ): AlignmentResult {
     const root: { [key: string]: string } = {};
     const align: { [key: string]: string } = {};
@@ -464,7 +464,7 @@ function balance(xss: XssMap, align: string | undefined = undefined): PositionMa
     });
 }
 
-function positionX(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, corePath: string[] | undefined): PositionMap {
+function positionX(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, corePath?: string[]): PositionMap {
     const layering: string[][] = util.buildLayerMatrix(graph);
     const conflicts: Conflicts = Object.assign(
         findType1Conflicts(graph, layering),

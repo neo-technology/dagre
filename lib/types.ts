@@ -121,10 +121,13 @@ export interface EdgeConfig {
     labeloffset?: number;
 }
 
-export interface LayoutConfig {
-    customOrder?: (graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, order: (graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts: LayoutOptions) => void) => void;
+export interface OrderOptions {
+    customOrder?: (graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, order: (graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts?: LayoutOptions, oldNodes?: NodeCollection) => void) => void;
     disableOptimalOrderHeuristic?: boolean;
-    constraints?: Array<{ left: string; right: string }>
+    constraints?: OrderConstraint[];
+}
+
+export interface LayoutConfig extends OrderOptions {
     useDynamic?: boolean;
     corePath?: string[];
 }
