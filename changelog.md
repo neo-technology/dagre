@@ -2,10 +2,15 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](https://semandtic-versioning.org/).
 
-## [3.0.1-pre] - 2026
+## [3.1.0] - 2026
 
 ### New Features
-* **Per-Cluster Direction Support (PR #511):** Each cluster/subgraph can now specify its own `rankdir`, `ranksep`, `nodesep`, and `align` settings. The layout engine recursively applies these settings, enabling complex nested cluster hierarchies. Backward compatible with global `rankdir` and legacy layouts.
+* **Per-Cluster Direction Support (PR #511):** Each cluster/subgraph can now specify its own `rankdir`, `ranksep`, `nodesep`, and `align` settings. The layout engine recursively applies these settings, enabling complex nested cluster hierarchies with independent flow directions. Fully backward compatible with global `rankdir` and legacy layouts.
+* **Dynamic Graph Layout Support (PR #512):** Added support for dynamic graph layouts via `useDynamic` and `corePath` configuration options in `LayoutConfig`. Enables persistent node ordering and layout stability when modifying graph structures.
+
+### Refactoring & Fixes
+* **TypeScript & Type Safety Improvements:** Added `ClusterNodeLabel` and `NodeCollection` types, updated `NodeLabel` interfaces, and eliminated `any` type assertions across the codebase.
+* **Nested Cluster Fixes:** Resolved edge cases in nested cluster isolation and improved edge routing for cross-cluster edges.
 
 ---
 
