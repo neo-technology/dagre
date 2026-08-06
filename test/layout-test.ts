@@ -296,7 +296,64 @@ describe("layout", () => {
             b: {x: 50 + 200 + 75 / 2, y: 200 / 2}
         });
     });
+
+    describe("dynamic layout state", () => {
+        const graphPairs: Array<[[string, string][], [string, string][]]> = [
+            [
+                [["b", "a"]],
+                [["a", "c"], ["a", "b"], ["c", "b"]]
+            ],
+            [
+                [["a", "c"], ["a", "b"], ["c", "b"]],
+                [["b", "a"]]
+            ]
+        ];
+
+        it.each(graphPairs)("does not share state between unrelated graphs", (firstEdges, secondEdges) => {
+            layout(createGraph(firstEdges));
+            expect(() => layout(createGraph(secondEdges))).not.toThrow();
+        });
+
+        it("produces stable positions when laying out the same graph repeatedly", () => {
+            const graph = createGraph([["a", "c"], ["a", "b"], ["c", "b"]]);
+
+            layout(graph);
+            const firstCoordinates = extractCoordinates(graph);
+            layout(graph);
+            expect(extractCoordinates(graph)).toEqual(firstCoordinates);
+            layout(graph);
+            expect(extractCoordinates(graph)).toEqual(firstCoordinates);
+        });
+
+        it("keeps state isolated when graph layouts are interleaved", () => {
+            const first = createGraph([["b", "a"]]);
+            const second = createGraph([["a", "c"], ["a", "b"], ["c", "b"]]);
+
+            layout(first);
+            layout(second);
+            expect(() => layout(first)).not.toThrow();
+            expect(() => layout(second)).not.toThrow();
+        });
+
+        it("can disable dynamic layout", () => {
+            const graph = createGraph([["a", "c"], ["a", "b"], ["c", "b"]]);
+
+            expect(() => layout(graph, {useDynamic: false})).not.toThrow();
+        });
+    });
 });
+
+function createGraph(edges: [string, string][]): Graph {
+    const graph = new Graph()
+        .setGraph({})
+        .setDefaultEdgeLabel(() => ({}));
+    edges.forEach(([v, w]) => {
+        graph.setNode(v, {width: 100, height: 100});
+        graph.setNode(w, {width: 100, height: 100});
+        graph.setEdge(v, w);
+    });
+    return graph;
+}
 
 function extractCoordinates(g: Graph) {
     const nodes = g.nodes();

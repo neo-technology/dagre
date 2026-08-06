@@ -34,8 +34,13 @@ interface EdgeProxyNodeLabel extends Omit<NodeLabel, 'e'> {
     e: Edge;
 }
 
-let _oldGraph: Graph<GraphLabel, NodeLabel, EdgeLabel> | null = null;
-let _rawOldNodes: NodeCollection = null;
+interface PreviousLayout {
+    graph: Graph<GraphLabel, NodeLabel, EdgeLabel>;
+    rawNodes: NodeCollection;
+}
+
+// Remember layout state per input graph so unrelated callers cannot affect each other.
+const previousLayouts = new WeakMap<Graph<GraphLabel, NodeLabel, EdgeLabel>, PreviousLayout>();
 
 export function layout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts: LayoutOptions = {}): Graph<GraphLabel, NodeLabel, EdgeLabel> {
     recursiveClusterLayout(g, util.notime, opts);
@@ -97,7 +102,7 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
             recursiveClusterLayout(subgraph, time, opts);
             // Run the layout pipeline on the subgraph via a proper layout graph
             const subLayoutG = buildLayoutGraph(subgraph);
-            runLayout(subLayoutG, time, opts);
+            runLayout(subLayoutG, time, opts, null);
             updateInputGraph(subgraph, subLayoutG);
             // Compute bounding box for the cluster
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -235,7 +240,8 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
 
     // --- Step 5: run the main layout for the top-level graph ---
     const layoutG = buildLayoutGraph(g);
-    runLayout(layoutG, time, opts);
+    const result = runLayout(layoutG, time, opts, previousLayouts.get(g) ?? null);
+    previousLayouts.set(g, result);
     updateInputGraph(g, layoutG);
 
     // --- Step 6: remove proxy edges, restore cluster internals, position children ---
@@ -317,15 +323,15 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
 function runLayout(
     g: Graph<GraphLabel, NodeLabel, EdgeLabel>,
     time: <T>(name: string, fn: () => T) => T,
-    opts: LayoutOptions
-): void {
-    if (opts?.useDynamic === false) {
-        _oldGraph = null;
-        _rawOldNodes = null;
-    }
+    opts: LayoutOptions,
+    previous: PreviousLayout | null = null
+): PreviousLayout {
+    const dynamic = opts?.useDynamic !== false;
+    const oldGraph = dynamic ? previous?.graph ?? null : null;
+    const rawOldNodes = dynamic ? previous?.rawNodes ?? null : null;
     time("    makeSpaceForEdgeLabels", () => makeSpaceForEdgeLabels(g));
     time("    removeSelfEdges", () => removeSelfEdges(g));
-    time("    acyclic", () => acyclic.run(g, _oldGraph));
+    time("    acyclic", () => acyclic.run(g, oldGraph));
     time("    nestingGraph.run", () => nestingGraph.run(g));
     time("    rank", () => rank(util.asNonCompoundGraph(g)));
     time("    injectEdgeLabelProxies", () => injectEdgeLabelProxies(g));
@@ -337,12 +343,12 @@ function runLayout(
     time("    normalize.run", () => normalize.run(g));
     time("    parentDummyChains", () => parentDummyChains(g));
     time("    addBorderSegments", () => addBorderSegments(g));
-    time("    order", () => order(g, opts, _rawOldNodes));
+    time("    order", () => order(g, opts, rawOldNodes));
     time("    insertSelfEdges", () => insertSelfEdges(g));
     time("    adjustCoordinateSystem", () => coordinateSystem.adjust(g));
     time("    position", () => position(g, opts.corePath));
     time("    positionSelfEdges", () => positionSelfEdges(g));
-    _rawOldNodes = JSON.parse(JSON.stringify((g as unknown as { _nodes: NodeCollection })._nodes));
+    const rawNodes: NodeCollection = JSON.parse(JSON.stringify((g as unknown as { _nodes: NodeCollection })._nodes));
     time("    removeBorderNodes", () => removeBorderNodes(g));
     time("    normalize.undo", () => normalize.undo(g));
     time("    fixupEdgeLabelCoords", () => fixupEdgeLabelCoords(g));
@@ -351,7 +357,8 @@ function runLayout(
     time("    assignNodeIntersects", () => assignNodeIntersects(g));
     time("    reversePoints", () => reversePointsForReversedEdges(g));
     time("    acyclic.undo", () => acyclic.undo(g));
-    _oldGraph = g;
+
+    return {graph: g, rawNodes};
 }
 
 /*
