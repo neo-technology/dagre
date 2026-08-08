@@ -6,7 +6,7 @@ DIST_DIR = dist
 
 SRC_FILES = index.js lib/version.ts $(shell find lib -type f -name '*.js')
 TEST_FILES = $(shell find test -type f -name '*.js' | grep -v 'bundle-test.js')
-BUILD_FILES = $(addprefix $(DIST_DIR)/, $(MOD).cjs.js $(MOD).esm.js $(MOD).min.js $(MOD).js)
+BUILD_FILES = $(addprefix $(DIST_DIR)/, $(MOD).cjs $(MOD).esm.js $(MOD).min.js $(MOD).js)
 
 .PHONY: all bench clean test dist lint build release node_modules
 

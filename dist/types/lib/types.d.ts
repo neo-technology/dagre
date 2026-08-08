@@ -1,5 +1,6 @@
-import { Graph } from '@dagrejs/graphlib';
-export type { Graph, Edge as GraphEdge } from '@dagrejs/graphlib';
+import { Graph as GraphLibGraph } from '@dagrejs/graphlib';
+export type Graph<G = any, N = any, E = any> = GraphLibGraph<G, N, E>;
+export type { Edge as GraphEdge } from '@dagrejs/graphlib';
 export interface Point {
     x: number;
     y: number;

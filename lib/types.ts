@@ -1,7 +1,8 @@
-// Re-export Graph and Edge types from graphlib
-import {Graph} from '@dagrejs/graphlib';
+import {Graph as GraphLibGraph} from '@dagrejs/graphlib';
 
-export type {Graph, Edge as GraphEdge} from '@dagrejs/graphlib';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Graph<G = any, N = any, E = any> = GraphLibGraph<G, N, E>;
+export type {Edge as GraphEdge} from '@dagrejs/graphlib';
 
 // Basic geometric types
 export interface Point {

@@ -1,3 +1,5 @@
-import {alg, Graph} from "@dagrejs/graphlib";
+import {alg, Graph as GraphLibGraph} from "@dagrejs/graphlib";
 
-export {Graph, alg};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class Graph<G = any, N = any, E = any> extends GraphLibGraph<G, N, E> {}
+export {alg};
