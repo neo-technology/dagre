@@ -39,7 +39,7 @@
     "layout"
   ],
   "dependencies": {
-    "@dagrejs/graphlib": "4.0.3"
+    "@dagrejs/graphlib": "4.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
