@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../lib/graph-lib";
 import parentDummyChains from "../lib/parent-dummy-chains";
 
 describe("parentDummyChains", () => {

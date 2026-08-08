@@ -1,4 +1,4 @@
-import {alg, Edge, Graph} from "@dagrejs/graphlib";
+import {alg, Edge, Graph} from "../lib/graph-lib";
 import * as acyclic from "../lib/acyclic";
 import findCycles = alg.findCycles;
 

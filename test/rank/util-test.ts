@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import {longestPath} from "../../lib/rank/util";
 import {normalizeRanks} from "../../lib/util";
 

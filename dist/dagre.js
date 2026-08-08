@@ -587,8 +587,7 @@ var dagre = (() => {
   }
 
   // lib/graph-lib.ts
-  var Graph = class extends p {
-  };
+  var Graph = p;
 
   // lib/util.ts
   function addDummyNode(graph, type, attrs, name) {

@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import crossCount from "../../lib/order/cross-count";
 
 describe("crossCount", () => {

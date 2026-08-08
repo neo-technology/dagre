@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../lib/graph-lib";
 import * as normalize from "../lib/normalize";
 import {Edge} from "../lib/types";
 

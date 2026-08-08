@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import initOrder from "../../lib/order/init-order";
 
 describe("order/initOrder", () => {

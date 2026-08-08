@@ -1,5 +1,5 @@
 import buildLayerGraph from "../../lib/order/build-layer-graph";
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import {GRAPH_NODE} from "../../lib/util";
 
 describe("order/buildLayerGraph", () => {

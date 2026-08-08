@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../lib/graph-lib";
 import addBorderSegments from "../lib/add-border-segments";
 
 describe("addBorderSegments", () => {

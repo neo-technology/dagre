@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../lib/graph-lib";
 import {layout} from "../lib/layout";
 
 describe('Per-Cluster Direction Architecture', () => {

@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import order from "../../lib/order";
 import crossCount from "../../lib/order/cross-count";
 import {buildLayerMatrix} from "../../lib/util";

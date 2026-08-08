@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import resolveConflicts, {ResolvedEntry} from "../../lib/order/resolve-conflicts";
 
 describe("order/resolveConflicts", () => {
