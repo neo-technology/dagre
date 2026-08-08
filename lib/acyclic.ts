@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "./graph-lib";
 import greedyFAS from "./greedy-fas";
 import {uniqueId} from "./util";
 import type {Edge, EdgeLabel, GraphLabel, NodeLabel, WeightFunction} from "./types";

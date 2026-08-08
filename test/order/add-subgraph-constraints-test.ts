@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import addSubgraphConstraints from "../../lib/order/add-subgraph-constraints";
 
 describe("order/addSubgraphConstraints", () => {

@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import sortSubgraph from "../../lib/order/sort-subgraph";
 
 describe("order/sortSubgraph", () => {

@@ -1,4 +1,4 @@
-import {Graph} from "@dagrejs/graphlib";
+import {Graph} from "../../lib/graph-lib";
 import feasibleTree from "../../lib/rank/feasible-tree";
 
 describe("feasibleTree", () => {

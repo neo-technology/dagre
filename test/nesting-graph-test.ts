@@ -1,4 +1,4 @@
-import {alg, Graph} from "@dagrejs/graphlib";
+import {alg, Graph} from "../lib/graph-lib";
 import * as nestingGraph from "../lib/nesting-graph";
 import components = alg.components;
 

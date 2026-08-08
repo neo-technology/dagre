@@ -14,7 +14,7 @@ const config: Config = {
     ],
     moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',
-        '^@dagrejs/dagre$': '<rootDir>/dist/dagre.cjs.js'
+        '^@dagrejs/dagre$': '<rootDir>/dist/dagre.cjs'
     },
     transform: {
         '^.+\\.ts$': ['ts-jest', {

@@ -8,7 +8,8 @@
     "Matthew Dahl (https://github.com/sandersky)"
   ],
   "license": "MIT",
-  "main": "dist/dagre.cjs.js",
+  "type": "module",
+  "main": "dist/dagre.cjs",
   "module": "dist/dagre.esm.js",
   "scripts": {
     "build": "npm run version:make && npm run build:types && tsx build.ts",
@@ -29,7 +30,7 @@
     ".": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/dagre.esm.js",
-      "require": "./dist/dagre.cjs.js"
+      "require": "./dist/dagre.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -39,7 +40,7 @@
     "layout"
   ],
   "dependencies": {
-    "@dagrejs/graphlib": "4.0.3"
+    "@dagrejs/graphlib": "4.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

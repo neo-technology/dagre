@@ -20,7 +20,7 @@ async function build(): Promise<void> {
     // 1. CommonJS (CJS) - For Node.js `require()`
     await esbuild.build({
         ...sharedConfig,
-        outfile: 'dist/dagre.cjs.js',
+        outfile: 'dist/dagre.cjs',
         format: 'cjs',
         platform: 'node',
     });

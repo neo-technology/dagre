@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "CommonJS",
     "types": [
-      "jest"
+      "jest",
+      "node"
     ],
     "paths": {
       "@dagrejs/dagre": ["./dist/types/index.d.ts"]

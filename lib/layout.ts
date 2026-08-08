@@ -42,8 +42,10 @@ interface PreviousLayout {
 // Remember layout state per input graph so unrelated callers cannot affect each other.
 const previousLayouts = new WeakMap<Graph<GraphLabel, NodeLabel, EdgeLabel>, PreviousLayout>();
 
-export function layout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, opts: LayoutOptions = {}): Graph<GraphLabel, NodeLabel, EdgeLabel> {
-    recursiveClusterLayout(g, util.notime, opts);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function layout<G = any, N = any, E = any>(g: Graph<G, N, E>, opts: LayoutOptions = {}): Graph<G, N, E> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recursiveClusterLayout(g as any, util.notime, opts);
     return g;
 }
 
@@ -70,7 +72,7 @@ function recursiveClusterLayout(g: Graph<GraphLabel, NodeLabel, EdgeLabel>, time
         const node = g.node(v);
         if (node && node.rankdir) {
             // Build a new graph for the cluster's subgraph
-            const subgraph = new Graph({ multigraph: true, compound: true });
+            const subgraph = new Graph<GraphLabel, NodeLabel, EdgeLabel>({ multigraph: true, compound: true });
             // Set the subgraph's direction on the graph label
             subgraph.setGraph({ rankdir: node.rankdir });
             // Copy nodes and edges belonging to this cluster
