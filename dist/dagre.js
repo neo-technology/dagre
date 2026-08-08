@@ -23,23 +23,23 @@ var dagre = (() => {
   // index.ts
   var index_exports = {};
   __export(index_exports, {
-    Graph: () => p,
+    Graph: () => Graph,
     debug: () => debugOrdering,
     default: () => index_default,
-    graphlib: () => graphlib_esm_exports,
+    graphlib: () => graph_lib_exports,
     layout: () => layout,
     util: () => util,
     version: () => version
   });
 
-  // node_modules/@dagrejs/graphlib/dist/graphlib.esm.js
-  var graphlib_esm_exports = {};
-  __export(graphlib_esm_exports, {
-    Graph: () => p,
-    alg: () => F,
-    json: () => v,
-    version: () => H
+  // lib/graph-lib.ts
+  var graph_lib_exports = {};
+  __export(graph_lib_exports, {
+    Graph: () => Graph,
+    alg: () => F
   });
+
+  // node_modules/@dagrejs/graphlib/dist/graphlib.esm.js
   var V = Object.defineProperty;
   var x = (s, e) => {
     for (var t in e) V(s, t, { get: e[t], enumerable: true });
@@ -262,7 +262,6 @@ var dagre = (() => {
   function G(s, e) {
     return _(s, e.v, e.w, e.name);
   }
-  var H = "4.0.5";
   var v = {};
   x(v, { read: () => K, write: () => U });
   function U(s) {
@@ -3208,7 +3207,7 @@ var dagre = (() => {
   // index.ts
   var util = { time, notime };
   var dagre = {
-    graphlib: graphlib_esm_exports,
+    graphlib: graph_lib_exports,
     version,
     layout,
     debug: debugOrdering,

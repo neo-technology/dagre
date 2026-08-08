@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-import * as graphlib from '@dagrejs/graphlib';
+import * as graphlib from './lib/graph-lib';
 import {notime, time} from './lib/util';
 import {version} from './lib/version';
 import {layout} from './lib/layout';
@@ -30,7 +30,7 @@ import {debugOrdering as debug} from './lib/debug';
 
 export {graphlib};
 
-export {Graph} from '@dagrejs/graphlib';
+export {Graph} from './lib/graph-lib';
 export {version} from './lib/version';
 export {layout} from './lib/layout';
 export {debugOrdering as debug} from './lib/debug';
