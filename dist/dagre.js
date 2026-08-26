@@ -837,7 +837,7 @@ var dagre = (() => {
   }
 
   // lib/version.ts
-  var version = "3.1.1";
+  var version = "3.1.1-neo4j.0";
 
   // lib/data/list.ts
   var List = class {
@@ -2170,6 +2170,10 @@ var dagre = (() => {
   }
   function findType2Conflicts(graph, layering) {
     const conflicts = {};
+    const hasBorderDummy = graph.nodes().some((v2) => graph.node(v2).dummy === "border");
+    if (!hasBorderDummy) {
+      return conflicts;
+    }
     function scan(south, southPos, southEnd, prevNorthBorder, nextNorthBorder) {
       range(southPos, southEnd).forEach((i) => {
         const v2 = south[i];

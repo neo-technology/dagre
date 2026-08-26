@@ -130,6 +130,24 @@ describe("position/bk", () => {
             findType1Conflicts(g, layering);
         });
 
+        it("returns no conflicts for flat graphs without border dummies", () => {
+            ["a", "b", "c", "d"].forEach(v => g.node(v).dummy = true);
+
+            const conflicts = findType2Conflicts(g, layering);
+            expect(conflicts).toEqual({});
+            expect(hasConflict(conflicts, "a", "d")).toBe(false);
+            expect(hasConflict(conflicts, "b", "c")).toBe(false);
+        });
+
+        it("still marks type-2 conflicts when border dummies are present", () => {
+            ["a", "d"].forEach(v => g.node(v).dummy = true);
+            ["b", "c"].forEach(v => g.node(v).dummy = "border");
+
+            const conflicts = findType2Conflicts(g, layering);
+            expect(hasConflict(conflicts, "a", "d")).toBe(true);
+            expect(hasConflict(conflicts, "b", "c")).toBe(false);
+        });
+
     });
 
     describe("hasConflict", () => {

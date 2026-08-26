@@ -92,6 +92,15 @@ function findType1Conflicts(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, laye
 function findType2Conflicts(graph: Graph<GraphLabel, NodeLabel, EdgeLabel>, layering: string[][]): Conflicts {
     const conflicts: Conflicts = {};
 
+    // Type-2 conflicts only matter for compound graphs (border dummies from
+    // addBorderSegments). On flat graphs the scan does O(n²·layers) work and
+    // never adds conflicts — skip it. Do not use a node-count heuristic: that
+    // wrongly disables type-2 once clusters introduce border dummies.
+    const hasBorderDummy = graph.nodes().some(v => (graph.node(v) as NodeLabel).dummy === "border");
+    if (!hasBorderDummy) {
+        return conflicts;
+    }
+
     function scan(south: string[], southPos: number, southEnd: number, prevNorthBorder: number, nextNorthBorder: number): void {
         util.range(southPos, southEnd).forEach(i => {
             const v = south[i];

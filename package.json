@@ -1,6 +1,6 @@
 {
-  "name": "@dagrejs/dagre",
-  "version": "3.1.1",
+  "name": "@neo4j-bloom/dagre",
+  "version": "3.1.1-neo4j.0",
   "description": "Graph layout for JavaScript",
   "author": "Chris Pettitt <cpettitt@gmail.com>",
   "contributors": [
@@ -65,6 +65,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dagrejs/dagre.git"
+    "url": "git@github.com:neo-technology/dagre.git"
   }
 }
