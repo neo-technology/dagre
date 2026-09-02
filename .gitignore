@@ -1,4 +1,8 @@
 build/
 node_modules/
 tmp/
-.vscode/
+coverage/
+/.nyc_output
+*.swp
+/.idea/
+lib/version.ts
